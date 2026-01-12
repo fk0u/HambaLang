@@ -1,0 +1,29 @@
+// HambaLang - Corruption Showcase
+// Menunjukkan berbagai tingkat korupsi
+
+lapor "=== SIMULASI KORUPSI BERTINGKAT ==="
+
+lapor "Anggaran awal:"
+print anggaran
+
+// Korupsi ringan
+lapor "\n[Tahap 1] Markup harga 10%"
+Korupsi(10)
+
+// Korupsi sedang
+lapor "\n[Tahap 2] Fee koordinasi 20%"
+Korupsi(20)
+
+// Korupsi berat
+lapor "\n[Tahap 3] Pemotongan anggaran 30%"
+Korupsi(30)
+
+// Cek sisa anggaran
+lapor "\nSisa anggaran setelah semua proses:"
+print anggaran
+
+// Validasi
+jika anggaran < 500000000 maka lapor "\n⚠️ BAHAYA: Anggaran kritis!"
+jika anggaran < 100000000 maka lapor "🚨 ALERT: Proyek terancam gagal!"
+
+selesai()

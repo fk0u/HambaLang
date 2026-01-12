@@ -1,0 +1,50 @@
+// HambaLang Demo Program
+// Satir Proyek Mega Infrastructure Indonesia
+
+lapor "=== MEGA PROYEK HAMBALANG ==="
+lapor "Wisma Atlet Kelas Dunia"
+
+// Cek anggaran awal
+lapor "Budget awal:"
+print anggaran
+
+// Fase Perencanaan
+lapor "\n[FASE 1] Perencanaan & Studi Kelayakan"
+Mangkrak(2000)
+
+// Korupsi tahap awal (20%)
+lapor "\n[FASE 2] Tender & Pengadaan"
+Korupsi(20)
+
+// Cek kondisi anggaran
+jika anggaran > 500000000 maka lapor "✅ Anggaran masih mencukupi, lanjut!"
+
+// Pembangunan dimulai
+lapor "\n[FASE 3] Groundbreaking Ceremony"
+Mangkrak(3000)
+
+// Korupsi tahap kedua (25%)
+lapor "\n[FASE 4] Pelaksanaan Konstruksi"
+Korupsi(25)
+
+// Mangkrak lagi
+lapor "\n[FASE 5] Quality Control"
+Mangkrak(2500)
+
+// Korupsi tahap ketiga (15%)
+lapor "\n[FASE 6] Finishing & Landscaping"
+Korupsi(15)
+
+// Cek anggaran akhir
+lapor "\nAnggaran tersisa:"
+print anggaran
+
+// Kondisional pembangunan
+jika anggaran < 100000000 maka lapor "⚠️ WARNING: Dana kritis!"
+
+// Selesai (secara administratif)
+lapor "\n[FASE 7] Peresmian"
+selesai()
+
+// Baris ini tidak akan dieksekusi
+lapor "Maintenance rutin..."

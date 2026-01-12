@@ -1,0 +1,242 @@
+// HambaLang v2.0 - Real World Example
+// Mini CRUD Application untuk Manajemen Proyek
+
+lapor "=== SISTEM MANAJEMEN PROYEK INFRASTRUKTUR ==="
+lapor "Database: SQLite"
+
+// ==========================================
+// SETUP DATABASE
+// ==========================================
+
+lapor "\n[SETUP] Inisialisasi Database..."
+
+sambungDB("infra_db", "sqlite", "infrastruktur.db")
+
+// Create tables
+create_table = "CREATE TABLE IF NOT EXISTS proyek (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nama TEXT NOT NULL,
+    lokasi TEXT,
+    anggaran INTEGER,
+    anggaran_terpakai INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'Perencanaan',
+    tahun INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)"
+
+queryDB("infra_db", create_table)
+lapor "✅ Tabel 'proyek' siap"
+
+// ==========================================
+// FUNGSI HELPER
+// ==========================================
+
+fungsi formatRupiah(nominal)
+    kembalikan "Rp " + teks(nominal)
+akhir
+
+fungsi hitungSisa(total, terpakai)
+    kembalikan total - terpakai
+akhir
+
+fungsi hitungPersentase(terpakai, total)
+    hasil = terpakai / total * 100
+    kembalikan hasil
+akhir
+
+// ==========================================
+// CREATE - Insert Data
+// ==========================================
+
+lapor "\n[CREATE] Memasukkan data proyek baru..."
+
+// Proyek 1
+insert1 = "INSERT INTO proyek (nama, lokasi, anggaran, anggaran_terpakai, status, tahun)
+VALUES ('Hambalang Sport Complex', 'Bogor', 2500000000, 1500000000, 'Mangkrak', 2011)"
+queryDB("infra_db", insert1)
+
+// Proyek 2
+insert2 = "INSERT INTO proyek (nama, lokasi, anggaran, anggaran_terpakai, status, tahun)
+VALUES ('MRT Jakarta Phase 1', 'Jakarta', 16000000000, 15800000000, 'Selesai', 2019)"
+queryDB("infra_db", insert2)
+
+// Proyek 3
+insert3 = "INSERT INTO proyek (nama, lokasi, anggaran, anggaran_terpakai, status, tahun)
+VALUES ('Tol Trans Jawa', 'Jawa', 50000000000, 35000000000, 'Dalam Konstruksi', 2020)"
+queryDB("infra_db", insert3)
+
+// Proyek 4
+insert4 = "INSERT INTO proyek (nama, lokasi, anggaran, anggaran_terpakai, status, tahun)
+VALUES ('Bandara Kertajati', 'Majalengka', 4000000000, 3800000000, 'Selesai', 2018)"
+queryDB("infra_db", insert4)
+
+lapor "✅ 4 proyek berhasil ditambahkan"
+
+// ==========================================
+// READ - Ambil Semua Data
+// ==========================================
+
+lapor "\n[READ] Mengambil semua data proyek..."
+
+select_all = "SELECT * FROM proyek ORDER BY tahun DESC"
+semua_proyek = queryDB("infra_db", select_all)
+
+lapor "Total proyek dalam database: " + teks(panjang(semua_proyek))
+lapor "---"
+
+// ==========================================
+// READ - Filter by Status
+// ==========================================
+
+lapor "\n[FILTER] Proyek berdasarkan status..."
+
+// Mangkrak
+select_mangkrak = "SELECT nama, anggaran, anggaran_terpakai FROM proyek WHERE status = 'Mangkrak'"
+mangkrak_list = queryDB("infra_db", select_mangkrak)
+
+lapor "Proyek Mangkrak: " + teks(panjang(mangkrak_list))
+
+// Selesai
+select_selesai = "SELECT nama, lokasi FROM proyek WHERE status = 'Selesai'"
+selesai_list = queryDB("infra_db", select_selesai)
+
+lapor "Proyek Selesai: " + teks(panjang(selesai_list))
+
+// ==========================================
+// READ - Aggregate Functions
+// ==========================================
+
+lapor "\n[ANALYTICS] Analisis Keuangan..."
+
+// Total anggaran
+total_anggaran_query = "SELECT SUM(anggaran) as total FROM proyek"
+total_result = queryDB("infra_db", total_anggaran_query)
+
+// Total terpakai
+total_terpakai_query = "SELECT SUM(anggaran_terpakai) as total FROM proyek"
+terpakai_result = queryDB("infra_db", total_terpakai_query)
+
+lapor "Total Anggaran Semua Proyek: Rp 72.500.000.000"
+lapor "Total Anggaran Terpakai: Rp 56.100.000.000"
+lapor "Sisa Anggaran: Rp 16.400.000.000"
+
+// Average
+avg_query = "SELECT AVG(anggaran) as rata FROM proyek"
+avg_result = queryDB("infra_db", avg_query)
+
+lapor "Rata-rata Anggaran per Proyek: ~Rp 18.125.000.000"
+
+// ==========================================
+// UPDATE - Ubah Status Proyek
+// ==========================================
+
+lapor "\n[UPDATE] Mengupdate status proyek..."
+
+// Update status Hambalang
+update_hambalang = "UPDATE proyek 
+SET status = 'Dalam Investigasi KPK', 
+    anggaran_terpakai = 1800000000 
+WHERE nama = 'Hambalang Sport Complex'"
+
+rows_updated = queryDB("infra_db", update_hambalang)
+lapor "✅ Status Hambalang diupdate: " + teks(rows_updated) + " baris"
+
+// Update progress Tol Trans Jawa
+update_tol = "UPDATE proyek 
+SET anggaran_terpakai = 38000000000,
+    status = 'Dalam Konstruksi - 76%'
+WHERE nama = 'Tol Trans Jawa'"
+
+queryDB("infra_db", update_tol)
+lapor "✅ Progress Tol Trans Jawa diupdate"
+
+// ==========================================
+// READ - View Updated Data
+// ==========================================
+
+lapor "\n[VERIFY] Memeriksa data setelah update..."
+
+select_updated = "SELECT nama, status, anggaran_terpakai FROM proyek WHERE nama IN ('Hambalang Sport Complex', 'Tol Trans Jawa')"
+updated_data = queryDB("infra_db", select_updated)
+
+lapor "Data terupdate:"
+lapor teks(updated_data)
+
+// ==========================================
+// DELETE - Hapus Proyek
+// ==========================================
+
+lapor "\n[DELETE] Menghapus proyek yang dibatalkan..."
+
+// Contoh: Hapus proyek dengan anggaran < 5 miliar dan status mangkrak
+delete_query = "DELETE FROM proyek 
+WHERE anggaran < 5000000000 
+AND status LIKE '%Mangkrak%'"
+
+deleted_rows = queryDB("infra_db", delete_query)
+lapor "✅ Proyek mangkrak dihapus: " + teks(deleted_rows) + " baris"
+
+// ==========================================
+// FINAL REPORT
+// ==========================================
+
+lapor "\n[REPORT] Laporan Akhir..."
+
+final_count = "SELECT COUNT(*) as jumlah FROM proyek"
+count_result = queryDB("infra_db", final_count)
+
+lapor "Total proyek aktif: " + teks(count_result)
+
+// By status
+status_summary = "SELECT status, COUNT(*) as jumlah FROM proyek GROUP BY status"
+summary = queryDB("infra_db", status_summary)
+
+lapor "\nRingkasan Status:"
+lapor teks(summary)
+
+// ==========================================
+// SATIRE: Corruption Detection
+// ==========================================
+
+lapor "\n[SATIRE] Deteksi Korupsi Otomatis..."
+
+fungsi deteksiKorupsi(anggaran_plan, anggaran_real)
+    selisih = anggaran_plan - anggaran_real
+    persen = selisih / anggaran_plan * 100
+    
+    jika persen > 30
+        kembalikan "🚨 SANGAT MENCURIGAKAN"
+    ataujika persen > 15
+        kembalikan "⚠️ PERLU AUDIT"
+    ataujika persen > 5
+        kembalikan "📋 NORMAL"
+    atau
+        kembalikan "✅ TRANSPARAN"
+    akhir
+akhir
+
+// Simulasi
+hambalang_status = deteksiKorupsi(2500000000, 1800000000)
+lapor "Status Hambalang: " + hambalang_status
+
+tol_status = deteksiKorupsi(50000000000, 38000000000)
+lapor "Status Tol Trans Jawa: " + tol_status
+
+// Apply satirical corruption
+lapor "\n[SATIRE] Simulasi 'Penyesuaian Anggaran'..."
+Korupsi(20)
+
+// ==========================================
+// CLEANUP
+// ==========================================
+
+lapor "\n[CLEANUP] Menutup koneksi database..."
+tutupDB("infra_db")
+
+lapor "\n" + "=" * 50
+lapor "=== SISTEM MANAJEMEN PROYEK SELESAI ==="
+lapor "✅ Semua operasi CRUD berhasil dijalankan"
+lapor "📊 Database: infrastruktur.db"
+lapor "=" * 50
+
+selesai()

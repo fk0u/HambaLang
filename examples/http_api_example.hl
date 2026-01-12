@@ -1,0 +1,146 @@
+// HambaLang v2.0 - HTTP/API Example
+// REST API Client - Fetch & Process Data
+
+lapor "=== HAMBALANG HTTP/API DEMO ==="
+lapor "REST API Client Example"
+
+// Note: Requires 'requests' library installed
+// Install: pip install requests
+
+// ==========================================
+// 1. HTTP GET REQUEST
+// ==========================================
+
+lapor "\n[1] HTTP GET Request..."
+
+// Example API: JSONPlaceholder (Free fake API)
+api_url = "https://jsonplaceholder.typicode.com/posts/1"
+
+response = httpGet(api_url)
+
+lapor "Status Code: " + teks(response["status"])
+lapor "Response:"
+lapor teks(response["json"])
+
+// ==========================================
+// 2. HTTP POST REQUEST
+// ==========================================
+
+lapor "\n[2] HTTP POST Request..."
+
+post_url = "https://jsonplaceholder.typicode.com/posts"
+
+// Data to post
+new_post = {
+    "title": "Laporan Proyek Hambalang",
+    "body": "Proyek mangkrak dengan dugaan korupsi",
+    "userId": 1
+}
+
+post_response = httpPost(post_url, new_post)
+
+lapor "Status Code: " + teks(post_response["status"])
+lapor "Response:"
+lapor teks(post_response["json"])
+
+// ==========================================
+// 3. PROCESS API DATA
+// ==========================================
+
+lapor "\n[3] Processing API Data..."
+
+// Simulate fetching multiple posts
+posts_url = "https://jsonplaceholder.typicode.com/posts"
+
+all_posts = httpGet(posts_url)
+
+jika all_posts["status"] == 200
+    lapor "✅ Data berhasil diambil"
+    lapor "Response body length: " + teks(panjang(all_posts["body"]))
+atau
+    lapor "❌ Gagal mengambil data"
+akhir
+
+// ==========================================
+// 4. SIMULATE GOVERNMENT API
+// ==========================================
+
+lapor "\n[4] Simulasi Government API..."
+
+fungsi checkProyekStatus(nama_proyek)
+    // Simulated API response
+    lapor "Checking status untuk: " + nama_proyek
+    
+    jika nama_proyek == "Hambalang"
+        kembalikan "Mangkrak - Dalam Investigasi KPK"
+    ataujika nama_proyek == "Meikarta"
+        kembalikan "Tertunda - Masalah Perizinan"
+    atau
+        kembalikan "Tidak Ditemukan"
+    akhir
+akhir
+
+status1 = checkProyekStatus("Hambalang")
+lapor "Status Hambalang: " + status1
+
+status2 = checkProyekStatus("Meikarta")
+lapor "Status Meikarta: " + status2
+
+// ==========================================
+// 5. DATA INTEGRATION
+// ==========================================
+
+lapor "\n[5] Data Integration..."
+
+// Combine API data with local processing
+fungsi analyzeProyekData(nama, anggaran_real, anggaran_proposal)
+    selisih = anggaran_proposal - anggaran_real
+    persentase = selisih / anggaran_proposal * 100
+    
+    lapor "Analisis: " + nama
+    lapor "  Budget Proposal: Rp " + teks(anggaran_proposal)
+    lapor "  Budget Realisasi: Rp " + teks(anggaran_real)
+    lapor "  Selisih: Rp " + teks(selisih)
+    lapor "  Persentase: " + teks(persentase) + "%"
+    
+    jika persentase > 30
+        lapor "  ⚠️ WARNING: Potensi korupsi tinggi!"
+    ataujika persentase > 15
+        lapor "  ⚠️ CAUTION: Perlu review"
+    atau
+        lapor "  ✅ Normal"
+    akhir
+    
+    kembalikan persentase
+akhir
+
+result1 = analyzeProyekData("Hambalang", 1500000000, 2500000000)
+result2 = analyzeProyekData("Tol Cipularang", 4500000000, 5000000000)
+
+// ==========================================
+// SATIRE: Corrupt API
+// ==========================================
+
+lapor "\n[SATIRE] Corrupt Government API..."
+
+fungsi getAnggaranTransparan(proyek)
+    // Versi resmi (palsu)
+    lapor "API Response (Versi Resmi): Rp 2.500.000.000"
+    lapor "Reality Check (Audit): Rp 1.200.000.000"
+    lapor "Selisih: Rp 1.300.000.000 (MENGUAP!)"
+    kembalikan 1300000000
+akhir
+
+dana_hilang = getAnggaranTransparan("Hambalang")
+lapor "Total Dana Hilang: Rp " + teks(dana_hilang)
+
+// Apply korupsi simulation
+Korupsi(25)
+
+// ==========================================
+// FINAL
+// ==========================================
+
+lapor "\n=== HTTP/API DEMO SELESAI ==="
+lapor "✅ REST API Client berfungsi dengan baik"
+lapor "Note: Beberapa API request mungkin membutuhkan koneksi internet"

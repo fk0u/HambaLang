@@ -1,0 +1,130 @@
+// HambaLang v2.0 - File I/O Example
+// Operasi File: Read, Write, JSON Processing
+
+lapor "=== HAMBALANG FILE I/O DEMO ==="
+
+// ==========================================
+// 1. WRITE TEXT FILE
+// ==========================================
+
+lapor "\n[1] Menulis file teks..."
+
+laporan = "LAPORAN PROYEK HAMBALANG\n"
+laporan = laporan + "==========================\n"
+laporan = laporan + "Nama: Proyek Wisma Atlet\n"
+laporan = laporan + "Lokasi: Hambalang, Bogor\n"
+laporan = laporan + "Status: Mangkrak\n"
+laporan = laporan + "Anggaran: Rp 2.5 Triliun\n"
+
+tulisFile("laporan_proyek.txt", laporan)
+lapor "✅ File laporan_proyek.txt berhasil ditulis"
+
+// ==========================================
+// 2. READ TEXT FILE
+// ==========================================
+
+lapor "\n[2] Membaca file teks..."
+
+isi_laporan = bacaFile("laporan_proyek.txt")
+lapor "Isi file:"
+lapor isi_laporan
+
+// ==========================================
+// 3. WRITE JSON FILE
+// ==========================================
+
+lapor "\n[3] Menulis file JSON..."
+
+proyek_data = {
+    "nama": "Hambalang",
+    "lokasi": "Bogor",
+    "tahun": 2011,
+    "anggaran": 2500000000,
+    "status": "Mangkrak",
+    "kontraktor": ["PT Adhi Karya", "PT Waskita"],
+    "persentase_selesai": 60
+}
+
+json_content = teks(proyek_data)
+tulisFile("proyek.json", json_content)
+
+lapor "✅ File proyek.json berhasil ditulis"
+
+// ==========================================
+// 4. PROCESS DATA
+// ==========================================
+
+lapor "\n[4] Memproses data proyek..."
+
+daftar_proyek = [
+    {"nama": "Hambalang", "budget": 2500000000, "terpakai": 1500000000},
+    {"nama": "Meikarta", "budget": 15000000000, "terpakai": 8000000000},
+    {"nama": "Tol Cisumdawu", "budget": 5000000000, "terpakai": 4200000000}
+]
+
+lapor "Analisis Efisiensi Anggaran:"
+lapor "----------------------------"
+
+// Analyze efficiency
+total_budget = 0
+total_terpakai = 0
+
+untuk i dari 0 sampai 2
+    current = daftar_proyek[i]
+    nama_proyek = current["nama"]
+    budget = angka(current["budget"])
+    terpakai = angka(current["terpakai"])
+    
+    efisiensi = terpakai / budget * 100
+    
+    lapor nama_proyek + " - Efisiensi: " + teks(efisiensi) + "%"
+    
+    total_budget = total_budget + budget
+    total_terpakai = total_terpakai + terpakai
+akhir
+
+lapor "\nTotal Budget: Rp " + teks(total_budget)
+lapor "Total Terpakai: Rp " + teks(total_terpakai)
+
+selisih = total_budget - total_terpakai
+lapor "Selisih (Potensi Korupsi): Rp " + teks(selisih)
+
+// ==========================================
+// 5. GENERATE REPORT
+// ==========================================
+
+lapor "\n[5] Generate laporan final..."
+
+report_final = "LAPORAN ANALISIS PROYEK\n"
+report_final = report_final + "========================\n\n"
+report_final = report_final + "Total Proyek: 3\n"
+report_final = report_final + "Total Budget: Rp " + teks(total_budget) + "\n"
+report_final = report_final + "Total Terpakai: Rp " + teks(total_terpakai) + "\n"
+report_final = report_final + "Selisih: Rp " + teks(selisih) + "\n\n"
+report_final = report_final + "Kesimpulan:\n"
+report_final = report_final + "Terdapat potensi inefisiensi dalam penggunaan anggaran.\n"
+report_final = report_final + "Diperlukan audit mendalam.\n"
+
+tulisFile("laporan_final.txt", report_final)
+
+lapor "✅ Laporan final berhasil dibuat: laporan_final.txt"
+
+// ==========================================
+// SATIRE: Corruption Simulation
+// ==========================================
+
+lapor "\n[SATIRE] Simulasi Korupsi..."
+
+anggaran_asli = 2500000000
+lapor "Anggaran asli: Rp " + teks(anggaran_asli)
+
+Korupsi(30)
+
+lapor "Anggaran setelah 'penyesuaian': Rp " + teks(anggaran)
+
+// ==========================================
+// FINAL
+// ==========================================
+
+lapor "\n=== FILE I/O DEMO SELESAI ==="
+lapor "✅ Semua operasi file berhasil"

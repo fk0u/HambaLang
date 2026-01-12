@@ -1,0 +1,17 @@
+// HambaLang - Infinite Loop Demo
+// Rapat tanpa akhir
+
+lapor "=== RAPAT KOORDINASI PROYEK ==="
+lapor "Agenda: Pembahasan anggaran"
+
+// Cek anggaran awal
+lapor "Budget tersedia:"
+print anggaran
+
+// Mulai rapat infinite
+lapor "\nMemulai RapatInfinite..."
+RapatInfinite()
+
+// Baris ini tidak akan pernah dieksekusi
+lapor "Rapat selesai!"
+selesai()

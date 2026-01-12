@@ -1,0 +1,119 @@
+// HambaLang v2.0 - Database Example
+// CRUD Application dengan SQLite
+
+lapor "=== HAMBALANG DATABASE DEMO ==="
+lapor "Sistem Manajemen Proyek"
+
+// ==========================================
+// 1. CONNECT TO DATABASE
+// ==========================================
+
+lapor "\n[1] Menghubungkan ke database..."
+sambungDB("proyek_db", "sqlite", "proyek_hambalang.db")
+
+// ==========================================
+// 2. CREATE TABLE
+// ==========================================
+
+lapor "\n[2] Membuat tabel proyek..."
+
+create_table = "CREATE TABLE IF NOT EXISTS proyek (id INTEGER PRIMARY KEY, nama TEXT, lokasi TEXT, anggaran INTEGER, status TEXT)"
+
+hasil = queryDB("proyek_db", create_table)
+lapor "✅ Tabel dibuat"
+
+// ==========================================
+// 3. INSERT DATA
+// ==========================================
+
+lapor "\n[3] Memasukkan data proyek..."
+
+data_proyek = [
+    {"nama": "Hambalang", "lokasi": "Bogor", "anggaran": 2500000000, "status": "Mangkrak"},
+    {"nama": "Meikarta", "lokasi": "Bekasi", "anggaran": 15000000000, "status": "Tertunda"},
+    {"nama": "Monas", "lokasi": "Jakarta", "anggaran": 500000000, "status": "Selesai"}
+]
+
+// Simplified insert (HambaLang doesn't support complex iteration in this demo)
+insert1 = "INSERT INTO proyek (nama, lokasi, anggaran, status) VALUES ('Hambalang', 'Bogor', 2500000000, 'Mangkrak')"
+hasil1 = queryDB("proyek_db", insert1)
+
+insert2 = "INSERT INTO proyek (nama, lokasi, anggaran, status) VALUES ('Meikarta', 'Bekasi', 15000000000, 'Tertunda')"
+hasil2 = queryDB("proyek_db", insert2)
+
+insert3 = "INSERT INTO proyek (nama, lokasi, anggaran, status) VALUES ('Monas', 'Jakarta', 500000000, 'Selesai')"
+hasil3 = queryDB("proyek_db", insert3)
+
+lapor "✅ Data berhasil dimasukkan"
+
+// ==========================================
+// 4. SELECT DATA
+// ==========================================
+
+lapor "\n[4] Mengambil semua proyek..."
+
+select_all = "SELECT * FROM proyek"
+semua_proyek = queryDB("proyek_db", select_all)
+
+lapor "Jumlah proyek: " + teks(panjang(semua_proyek))
+lapor "Data proyek:"
+lapor teks(semua_proyek)
+
+// ==========================================
+// 5. SELECT WITH FILTER
+// ==========================================
+
+lapor "\n[5] Mencari proyek mangkrak..."
+
+select_mangkrak = "SELECT nama, lokasi, anggaran FROM proyek WHERE status = 'Mangkrak'"
+proyek_mangkrak = queryDB("proyek_db", select_mangkrak)
+
+lapor "Proyek mangkrak: " + teks(panjang(proyek_mangkrak))
+lapor teks(proyek_mangkrak)
+
+// ==========================================
+// 6. UPDATE DATA
+// ==========================================
+
+lapor "\n[6] Update status proyek..."
+
+update_query = "UPDATE proyek SET status = 'Dalam Investigasi' WHERE nama = 'Hambalang'"
+hasil_update = queryDB("proyek_db", update_query)
+
+lapor "✅ Status diupdate: " + teks(hasil_update) + " baris"
+
+// ==========================================
+// 7. COUNT & AGGREGATE
+// ==========================================
+
+lapor "\n[7] Statistik proyek..."
+
+count_query = "SELECT COUNT(*) as total FROM proyek"
+total = queryDB("proyek_db", count_query)
+
+sum_query = "SELECT SUM(anggaran) as total_anggaran FROM proyek"
+total_budget = queryDB("proyek_db", sum_query)
+
+lapor "Total proyek: " + teks(total)
+lapor "Total anggaran: " + teks(total_budget)
+
+// ==========================================
+// 8. DELETE DATA
+// ==========================================
+
+lapor "\n[8] Menghapus proyek yang selesai..."
+
+delete_query = "DELETE FROM proyek WHERE status = 'Selesai'"
+hasil_delete = queryDB("proyek_db", delete_query)
+
+lapor "✅ Dihapus: " + teks(hasil_delete) + " baris"
+
+// ==========================================
+// 9. CLOSE CONNECTION
+// ==========================================
+
+lapor "\n[9] Menutup koneksi database..."
+tutupDB("proyek_db")
+
+lapor "\n=== DATABASE DEMO SELESAI ==="
+lapor "✅ Semua operasi CRUD berhasil dijalankan"

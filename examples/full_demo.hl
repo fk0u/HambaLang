@@ -1,0 +1,181 @@
+// HambaLang v2.0 - Complete Feature Demo
+// Demonstrasi lengkap: Variables, Functions, Loops, Arrays, Objects
+
+lapor "=== HAMBALANG v2.0 - COMPLETE DEMO ==="
+
+// ==========================================
+// 1. VARIABLES & DATA TYPES
+// ==========================================
+
+lapor "\n[1] VARIABLES & DATA TYPES"
+
+nama = "Proyek Hambalang"
+tahun = 2011
+status = benar
+dana_awal = 2500000000
+
+lapor "Nama: " + nama
+lapor "Tahun: " + teks(tahun)
+lapor "Dana Awal: Rp " + teks(dana_awal)
+
+// ==========================================
+// 2. ARRAYS / LISTS
+// ==========================================
+
+lapor "\n[2] ARRAYS"
+
+kontraktor = ["PT Adhi Karya", "PT Waskita", "PT Wijaya Karya"]
+anggaran_per_fase = [500000000, 800000000, 1200000000]
+
+lapor "Jumlah kontraktor: " + teks(panjang(kontraktor))
+lapor "Kontraktor pertama: " + kontraktor[0]
+lapor "Anggaran fase 3: Rp " + teks(anggaran_per_fase[2])
+
+// ==========================================
+// 3. OBJECTS / DICTS
+// ==========================================
+
+lapor "\n[3] OBJECTS"
+
+proyek = {"nama": "Hambalang", "lokasi": "Bogor", "status": "Mangkrak", "tahun": 2011}
+
+lapor "Lokasi: " + proyek["lokasi"]
+lapor "Status: " + proyek["status"]
+
+// ==========================================
+// 4. ARITHMETIC OPERATIONS
+// ==========================================
+
+lapor "\n[4] OPERASI MATEMATIKA"
+
+total_anggaran = 1000000000
+biaya_aktual = 350000000
+selisih = total_anggaran - biaya_aktual
+
+lapor "Total Anggaran: Rp " + teks(total_anggaran)
+lapor "Biaya Aktual: Rp " + teks(biaya_aktual)
+lapor "Selisih (korupsi?): Rp " + teks(selisih)
+
+// ==========================================
+// 5. CONDITIONAL STATEMENTS
+// ==========================================
+
+lapor "\n[5] CONDITIONAL (IF/ELIF/ELSE)"
+
+dana_tersisa = 750000000
+
+jika dana_tersisa > 1000000000
+    lapor "✅ Dana mencukupi untuk lanjut"
+ataujika dana_tersisa > 500000000
+    lapor "⚠️ Dana cukup, tapi harus hati-hati"
+atau
+    lapor "🚨 Dana kritis! Proyek terancam"
+akhir
+
+// ==========================================
+// 6. LOOPS - WHILE
+// ==========================================
+
+lapor "\n[6] WHILE LOOP"
+
+lapor "Proses approval berlapis..."
+tingkat_approval = 1
+
+selama tingkat_approval <= 5
+    lapor "Approval tingkat " + teks(tingkat_approval) + " - Menunggu tanda tangan..."
+    tingkat_approval = tingkat_approval + 1
+akhir
+
+lapor "✅ Semua approval selesai!"
+
+// ==========================================
+// 7. LOOPS - FOR
+// ==========================================
+
+lapor "\n[7] FOR LOOP - Range"
+
+lapor "Pembangunan 5 gedung:"
+untuk gedung dari 1 sampai 5
+    lapor "Gedung " + teks(gedung) + " - Dalam konstruksi"
+akhir
+
+lapor "\n[7b] FOR LOOP - Array Iteration"
+
+lapor "Daftar vendor:"
+vendors = ["PT Adhi", "PT Waskita", "PT Hutama"]
+
+untuk vendor dalam vendors
+    lapor "- " + vendor
+akhir
+
+// ==========================================
+// 8. FUNCTIONS
+// ==========================================
+
+lapor "\n[8] FUNCTIONS"
+
+fungsi hitungPajak(nominal, persen)
+    hasil = nominal * persen / 100
+    kembalikan hasil
+akhir
+
+anggaran_proyek = 1000000000
+pajak = hitungPajak(anggaran_proyek, 10)
+
+lapor "Anggaran: Rp " + teks(anggaran_proyek)
+lapor "Pajak 10%: Rp " + teks(pajak)
+
+// ==========================================
+// 9. NESTED FUNCTIONS & LOGIC
+// ==========================================
+
+lapor "\n[9] NESTED LOGIC"
+
+fungsi validasiAnggaran(budget, minimum)
+    jika budget >= minimum
+        kembalikan benar
+    atau
+        kembalikan salah
+    akhir
+akhir
+
+budget_proposal = 500000000
+valid = validasiAnggaran(budget_proposal, 300000000)
+
+jika valid
+    lapor "✅ Proposal anggaran disetujui"
+atau
+    lapor "❌ Proposal ditolak"
+akhir
+
+// ==========================================
+// 10. ARRAY MANIPULATION
+// ==========================================
+
+lapor "\n[10] ARRAY MANIPULATION"
+
+daftar_item = ["Semen", "Besi", "Pasir"]
+lapor "Item awal: " + teks(panjang(daftar_item))
+
+tambahArray(daftar_item, "Batu")
+lapor "Setelah tambah: " + teks(panjang(daftar_item))
+
+// ==========================================
+// 11. SATIRE FEATURES (Original)
+// ==========================================
+
+lapor "\n[11] SATIRE FEATURES"
+
+lapor "Anggaran saat ini: Rp " + teks(anggaran)
+
+Korupsi(15)
+
+lapor "Simulasi mangkrak..."
+Mangkrak(1500)
+
+// ==========================================
+// FINAL
+// ==========================================
+
+lapor "\n=== DEMO SELESAI ==="
+lapor "HambaLang v2.0 - Full Feature Programming Language"

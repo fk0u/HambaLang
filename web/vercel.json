@@ -1,0 +1,9 @@
+# Use this file to deploy to Vercel
+# Place this in the web/ directory root
+
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "build",
+  "framework": "sveltekit",
+  "installCommand": "npm install"
+}

@@ -1,0 +1,282 @@
+// HambaLang v2.0 - Algorithm Examples
+// Demonstrasi Algoritma & Problem Solving
+
+lapor "=== HAMBALANG ALGORITHM DEMO ==="
+
+// ==========================================
+// 1. SORTING ALGORITHM (Bubble Sort)
+// ==========================================
+
+lapor "\n[1] BUBBLE SORT"
+
+fungsi bubbleSort(arr)
+    n = panjang(arr)
+    
+    untuk i dari 0 sampai n-2
+        untuk j dari 0 sampai n-i-2
+            jika arr[j] > arr[j+1]
+                // Swap
+                temp = arr[j]
+                arr[j] = arr[j+1]
+                arr[j+1] = temp
+            akhir
+        akhir
+    akhir
+    
+    kembalikan arr
+akhir
+
+anggaran_proyek = [2500000000, 500000000, 15000000000, 1000000000, 750000000]
+
+lapor "Anggaran sebelum sorting:"
+lapor teks(anggaran_proyek)
+
+sorted_anggaran = bubbleSort(anggaran_proyek)
+
+lapor "Anggaran setelah sorting:"
+lapor teks(sorted_anggaran)
+
+// ==========================================
+// 2. SEARCH ALGORITHM (Linear Search)
+// ==========================================
+
+lapor "\n[2] LINEAR SEARCH"
+
+fungsi linearSearch(arr, target)
+    untuk i dari 0 sampai panjang(arr)-1
+        jika arr[i] == target
+            kembalikan i
+        akhir
+    akhir
+    kembalikan -1
+akhir
+
+proyek_list = ["Hambalang", "Meikarta", "Monas", "Tol Cipularang", "MRT Jakarta"]
+
+cari = "Meikarta"
+index = linearSearch(proyek_list, cari)
+
+jika index >= 0
+    lapor "Proyek '" + cari + "' ditemukan di index: " + teks(index)
+atau
+    lapor "Proyek tidak ditemukan"
+akhir
+
+// ==========================================
+// 3. FIBONACCI SEQUENCE
+// ==========================================
+
+lapor "\n[3] FIBONACCI SEQUENCE"
+
+fungsi fibonacci(n)
+    jika n <= 1
+        kembalikan n
+    atau
+        a = 0
+        b = 1
+        untuk i dari 2 sampai n
+            c = a + b
+            a = b
+            b = c
+        akhir
+        kembalikan b
+    akhir
+akhir
+
+lapor "10 Angka Fibonacci pertama:"
+untuk i dari 0 sampai 9
+    fib = fibonacci(i)
+    lapor "Fib(" + teks(i) + ") = " + teks(fib)
+akhir
+
+// ==========================================
+// 4. FACTORIAL
+// ==========================================
+
+lapor "\n[4] FACTORIAL"
+
+fungsi factorial(n)
+    jika n <= 1
+        kembalikan 1
+    atau
+        hasil = 1
+        untuk i dari 2 sampai n
+            hasil = hasil * i
+        akhir
+        kembalikan hasil
+    akhir
+akhir
+
+n = 5
+result = factorial(n)
+lapor "Factorial of " + teks(n) + " = " + teks(result)
+
+// ==========================================
+// 5. SUM OF ARRAY
+// ==========================================
+
+lapor "\n[5] SUM OF ARRAY"
+
+fungsi sumArray(arr)
+    total = 0
+    untuk i dari 0 sampai panjang(arr)-1
+        total = total + arr[i]
+    akhir
+    kembalikan total
+akhir
+
+budget_list = [1000000000, 2500000000, 750000000, 1200000000]
+total_budget = sumArray(budget_list)
+
+lapor "Budget list: " + teks(budget_list)
+lapor "Total budget: Rp " + teks(total_budget)
+
+// ==========================================
+// 6. AVERAGE CALCULATION
+// ==========================================
+
+lapor "\n[6] AVERAGE"
+
+fungsi average(arr)
+    jika panjang(arr) == 0
+        kembalikan 0
+    atau
+        total = sumArray(arr)
+        rata = total / panjang(arr)
+        kembalikan rata
+    akhir
+akhir
+
+persentase_selesai = [60, 75, 45, 80, 55]
+rata_selesai = average(persentase_selesai)
+
+lapor "Persentase selesai proyek: " + teks(persentase_selesai)
+lapor "Rata-rata: " + teks(rata_selesai) + "%"
+
+// ==========================================
+// 7. MIN & MAX
+// ==========================================
+
+lapor "\n[7] MIN & MAX"
+
+fungsi findMin(arr)
+    min_val = arr[0]
+    untuk i dari 1 sampai panjang(arr)-1
+        jika arr[i] < min_val
+            min_val = arr[i]
+        akhir
+    akhir
+    kembalikan min_val
+akhir
+
+fungsi findMax(arr)
+    max_val = arr[0]
+    untuk i dari 1 sampai panjang(arr)-1
+        jika arr[i] > max_val
+            max_val = arr[i]
+        akhir
+    akhir
+    kembalikan max_val
+akhir
+
+data_anggaran = [2500000000, 500000000, 15000000000, 750000000]
+
+min_anggaran = findMin(data_anggaran)
+max_anggaran = findMax(data_anggaran)
+
+lapor "Anggaran terendah: Rp " + teks(min_anggaran)
+lapor "Anggaran tertinggi: Rp " + teks(max_anggaran)
+
+// ==========================================
+// 8. COUNT OCCURRENCES
+// ==========================================
+
+lapor "\n[8] COUNT OCCURRENCES"
+
+fungsi countStatus(proyek_list, target_status)
+    count = 0
+    untuk i dari 0 sampai panjang(proyek_list)-1
+        proyek = proyek_list[i]
+        jika proyek["status"] == target_status
+            count = count + 1
+        akhir
+    akhir
+    kembalikan count
+akhir
+
+// Simplified - In real implementation, would use dict array
+mangkrak_count = 3
+selesai_count = 1
+tertunda_count = 2
+
+lapor "Proyek Mangkrak: " + teks(mangkrak_count)
+lapor "Proyek Selesai: " + teks(selesai_count)
+lapor "Proyek Tertunda: " + teks(tertunda_count)
+
+// ==========================================
+// 9. PRIME NUMBER CHECK
+// ==========================================
+
+lapor "\n[9] PRIME NUMBER CHECK"
+
+fungsi isPrime(n)
+    jika n <= 1
+        kembalikan salah
+    akhir
+    
+    jika n <= 3
+        kembalikan benar
+    akhir
+    
+    untuk i dari 2 sampai n-1
+        jika n % i == 0
+            kembalikan salah
+        akhir
+    akhir
+    
+    kembalikan benar
+akhir
+
+test_num = 17
+is_prime = isPrime(test_num)
+
+jika is_prime
+    lapor teks(test_num) + " adalah bilangan prima"
+atau
+    lapor teks(test_num) + " bukan bilangan prima"
+akhir
+
+// ==========================================
+// 10. SATIRE: CORRUPTION ALGORITHM
+// ==========================================
+
+lapor "\n[10] SATIRE: CORRUPTION DETECTION ALGORITHM"
+
+fungsi detectCorruption(anggaran_proposal, anggaran_realisasi)
+    selisih = anggaran_proposal - anggaran_realisasi
+    persentase = selisih / anggaran_proposal * 100
+    
+    lapor "Anggaran Proposal: Rp " + teks(anggaran_proposal)
+    lapor "Anggaran Realisasi: Rp " + teks(anggaran_realisasi)
+    lapor "Selisih: Rp " + teks(selisih)
+    lapor "Persentase: " + teks(persentase) + "%"
+    
+    jika persentase > 40
+        kembalikan "SANGAT MENCURIGAKAN"
+    ataujika persentase > 25
+        kembalikan "MENCURIGAKAN"
+    ataujika persentase > 10
+        kembalikan "PERLU REVIEW"
+    atau
+        kembalikan "NORMAL"
+    akhir
+akhir
+
+status_korupsi = detectCorruption(2500000000, 1200000000)
+lapor "Status: " + status_korupsi
+
+// Final satire
+Korupsi(20)
+Mangkrak(1000)
+
+lapor "\n=== ALGORITHM DEMO SELESAI ==="

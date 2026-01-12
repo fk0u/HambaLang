@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HambaLang Documentation - Esoteric Programming Language</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            padding: 3rem 0;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tagline {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .version {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .content {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            margin-top: 2rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        nav {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 20px;
+        }
+
+        nav h3 {
+            margin-bottom: 1rem;
+            color: #2a5298;
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav a {
+            color: #495057;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #2a5298;
+            padding-left: 0.5rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+
+        h2 {
+            color: #2a5298;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        h3 {
+            color: #495057;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #2a5298;
+        }
+
+        .feature-card h4 {
+            color: #2a5298;
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .example {
+            background: #e7f5ff;
+            border-left: 4px solid #0c63e4;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .button {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin: 0.5rem;
+        }
+
+        .button:hover {
+            background: #218838;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                position: relative;
+                top: 0;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏗️ HambaLang</h1>
+            <p class="tagline">Esoteric Programming Language - Satir Proyek Hambalang</p>
+            <div class="version">v2.0 - Complete Edition</div>
+            <div style="margin-top: 2rem;">
+                <a href="https://github.com/yourusername/hambalang" class="button">📦 GitHub</a>
+                <a href="../web/index.html" class="button">▶️ Try Online</a>
+                <a href="#quick-start" class="button button-secondary">🚀 Quick Start</a>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="main-content">
+                <nav>
+                    <h3>📚 Daftar Isi</h3>
+                    <ul>
+                        <li><a href="#introduction">Pengenalan</a></li>
+                        <li><a href="#philosophy">Filosofi</a></li>
+                        <li><a href="#features">Fitur Lengkap</a></li>
+                        <li><a href="#quick-start">Quick Start</a></li>
+                        <li><a href="#syntax">Syntax Reference</a></li>
+                        <li><a href="#data-types">Data Types</a></li>
+                        <li><a href="#control-flow">Control Flow</a></li>
+                        <li><a href="#functions">Functions</a></li>
+                        <li><a href="#arrays">Arrays & Objects</a></li>
+                        <li><a href="#database">Database</a></li>
+                        <li><a href="#file-io">File I/O</a></li>
+                        <li><a href="#http">HTTP/API</a></li>
+                        <li><a href="#examples">Examples</a></li>
+                        <li><a href="#api">API Reference</a></li>
+                    </ul>
+                </nav>
+
+                <div>
+                    <section id="introduction">
+                        <h2>📖 Pengenalan</h2>
+                        <p>
+                            <strong>HambaLang</strong> adalah bahasa pemrograman esoterik yang dirancang sebagai parodi satir 
+                            dari proyek Hambalang yang terkenal dengan korupsi, birokrasi berlapis, dan status "selesai" 
+                            yang hanya di atas kertas.
+                        </p>
+                        <p>
+                            Versi 2.0 menghadirkan fitur lengkap untuk membangun aplikasi nyata, dari program sederhana 
+                            hingga aplikasi menengah dengan database, file I/O, dan REST API.
+                        </p>
+                    </section>
+
+                    <section id="philosophy">
+                        <h2>🎭 Filosofi</h2>
+                        <p><strong>Alur Birokrasi:</strong></p>
+                        <pre><code>lapor → lelang → mangkrak → rapat → (mungkin) selesai</code></pre>
+                        
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <h4>💰 Korupsi</h4>
+                                <p>Anggaran menguap secara acak</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>⏳ Mangkrak</h4>
+                                <p>Proyek tertunda dengan event random</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>📋 Rapat</h4>
+                                <p>Meeting tanpa akhir</p>
+                            </div>
+                            <div class="feature-card">
+                                <h4>✅ Selesai</h4>
+                                <p>Status administratif, bukan fisik</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="features">
+                        <h2>✨ Fitur Lengkap v2.0</h2>
+                        
+                        <h3>Core Features:</h3>
+                        <ul>
+                            <li>✅ Variables & Data Types (string, number, boolean, array, object)</li>
+                            <li>✅ Functions & Parameters</li>
+                            <li>✅ Control Flow (if/elif/else, while, for)</li>
+                            <li>✅ Arrays & Objects</li>
+                            <li>✅ Mathematical & Logical Operations</li>
+                            <li>✅ String Operations</li>
+                        </ul>
+
+                        <h3>Advanced Features:</h3>
+                        <ul>
+                            <li>✅ Database Support (SQLite, MySQL, PostgreSQL)</li>
+                            <li>✅ File I/O (Read, Write, JSON)</li>
+                            <li>✅ HTTP/REST API Client</li>
+                            <li>✅ Built-in Functions</li>
+                            <li>✅ Error Handling</li>
+                        </ul>
+
+                        <h3>Satire Features:</h3>
+                        <ul>
+                            <li>✅ <code>Mangkrak()</code> - Delay dengan random events</li>
+                            <li>✅ <code>Korupsi()</code> - Anggaran menguap</li>
+                            <li>✅ <code>RapatInfinite()</code> - Infinite loop</li>
+                            <li>✅ <code>selesai()</code> - "Selesai" administratif</li>
+                        </ul>
+                    </section>
+
+                    <section id="quick-start">
+                        <h2>🚀 Quick Start</h2>
+                        
+                        <h3>Installation</h3>
+                        <pre><code># Clone repository
+git clone https://github.com/yourusername/hambalang.git
+cd hambalang
+
+# Install dependencies
+pip install requests mysql-connector-python psycopg2-binary
+
+# Run example
+python interpreter/hamba_v2.py examples/full_demo.hl</code></pre>
+
+                        <h3>Hello Hambalang</h3>
+                        <pre><code>// File: hello.hl
+lapor "Hello, Hambalang!"
+lapor "Proyek Mega Infrastructure"
+
+anggaran = 1000000000
+Korupsi(25)
+
+lapor "Sisa anggaran: Rp " + teks(anggaran)
+
+selesai()</code></pre>
+
+                        <div class="info">
+                            <strong>💡 Tips:</strong> Semua file HambaLang harus menggunakan ekstensi <code>.hl</code>
+                        </div>
+                    </section>
+
+                    <section id="syntax">
+                        <h2>📝 Syntax Reference</h2>
+                        
+                        <h3>Comments</h3>
+                        <pre><code>// Ini adalah komentar single-line</code></pre>
+
+                        <h3>Print / Output</h3>
+                        <pre><code>lapor "Pesan"        // Style Indonesia
+print "Message"      // Style universal</code></pre>
+
+                        <h3>Variables</h3>
+                        <pre><code>nama = "Hambalang"
+tahun = 2011
+aktif = benar
+kosong_val = kosong</code></pre>
+
+                        <h3>Operators</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Operators</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Arithmetic</td>
+                                    <td><code>+ - * / %</code></td>
+                                    <td><code>total = 100 + 50</code></td>
+                                </tr>
+                                <tr>
+                                    <td>Comparison</td>
+                                    <td><code>== != < > <= >=</code></td>
+                                    <td><code>jika x > 10</code></td>
+                                </tr>
+                                <tr>
+                                    <td>Logical</td>
+                                    <td><code>dan atau</code></td>
+                                    <td><code>jika x > 5 dan y < 10</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="data-types">
+                        <h2>🎯 Data Types</h2>
+                        
+                        <h3>String</h3>
+                        <pre><code>nama = "Proyek Hambalang"
+lokasi = 'Bogor'
+gabung = nama + " - " + lokasi</code></pre>
+
+                        <h3>Number</h3>
+                        <pre><code>integer = 42
+float_num = 3.14
+result = 100 * 2.5</code></pre>
+
+                        <h3>Boolean</h3>
+                        <pre><code>aktif = benar
+selesai = salah</code></pre>
+
+                        <h3>Array / List</h3>
+                        <pre><code>proyek = ["Hambalang", "Meikarta", "Monas"]
+angka = [1, 2, 3, 4, 5]
+mixed = ["Text", 123, benar]</code></pre>
+
+                        <h3>Object / Dictionary</h3>
+                        <pre><code>data = {
+    "nama": "Hambalang",
+    "lokasi": "Bogor",
+    "anggaran": 2500000000,
+    "status": "Mangkrak"
+}</code></pre>
+                    </section>
+
+                    <section id="control-flow">
+                        <h2>🔀 Control Flow</h2>
+                        
+                        <h3>If / Elif / Else</h3>
+                        <pre><code>jika anggaran > 1000000000
+    lapor "Dana mencukupi"
+ataujika anggaran > 500000000
+    lapor "Dana cukup"
+atau
+    lapor "Dana kurang"
+akhir</code></pre>
+
+                        <h3>While Loop</h3>
+                        <pre><code>counter = 0
+
+selama counter < 5
+    lapor "Iterasi: " + teks(counter)
+    counter = counter + 1
+akhir</code></pre>
+
+                        <h3>For Loop (Range)</h3>
+                        <pre><code>untuk i dari 1 sampai 10
+    lapor "Angka: " + teks(i)
+akhir</code></pre>
+
+                        <h3>For Loop (Array)</h3>
+                        <pre><code>items = ["A", "B", "C"]
+
+untuk item dalam items
+    lapor "Item: " + item
+akhir</code></pre>
+
+                        <h3>Loop Control</h3>
+                        <pre><code>untuk i dari 1 sampai 10
+    jika i == 5
+        hentikan     // break
+    akhir
+    
+    jika i == 3
+        lanjut       // continue
+    akhir
+    
+    lapor teks(i)
+akhir</code></pre>
+                    </section>
+
+                    <section id="functions">
+                        <h2>⚡ Functions</h2>
+                        
+                        <h3>Function Definition</h3>
+                        <pre><code>fungsi hitungPajak(nominal, persen)
+    hasil = nominal * persen / 100
+    kembalikan hasil
+akhir
+
+pajak = hitungPajak(1000000, 10)
+lapor "Pajak: " + teks(pajak)</code></pre>
+
+                        <h3>Built-in Functions</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Function</th>
+                                    <th>Description</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>panjang(x)</code></td>
+                                    <td>Get length</td>
+                                    <td><code>panjang("Hello")</code> → 5</td>
+                                </tr>
+                                <tr>
+                                    <td><code>tipe(x)</code></td>
+                                    <td>Get type</td>
+                                    <td><code>tipe(123)</code> → "int"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>angka(x)</code></td>
+                                    <td>Convert to number</td>
+                                    <td><code>angka("123")</code> → 123</td>
+                                </tr>
+                                <tr>
+                                    <td><code>teks(x)</code></td>
+                                    <td>Convert to string</td>
+                                    <td><code>teks(123)</code> → "123"</td>
+                                </tr>
+                                <tr>
+                                    <td><code>tambahArray(arr, val)</code></td>
+                                    <td>Add to array</td>
+                                    <td><code>tambahArray(list, "item")</code></td>
+                                </tr>
+                                <tr>
+                                    <td><code>hapusArray(arr, index)</code></td>
+                                    <td>Remove from array</td>
+                                    <td><code>hapusArray(list, 0)</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section id="arrays">
+                        <h2>📦 Arrays & Objects</h2>
+                        
+                        <h3>Array Operations</h3>
+                        <pre><code>// Create array
+items = ["A", "B", "C"]
+
+// Access element
+first = items[0]
+
+// Modify element
+items[1] = "Z"
+
+// Add element
+tambahArray(items, "D")
+
+// Remove element
+hapusArray(items, 0)
+
+// Length
+size = panjang(items)</code></pre>
+
+                        <h3>Object Operations</h3>
+                        <pre><code>// Create object
+user = {
+    "nama": "Ahmad",
+    "umur": 30,
+    "kota": "Jakarta"
+}
+
+// Access property
+nama_user = user["nama"]
+
+// Modify property
+user["umur"] = 31
+
+// Check length
+jumlah_keys = panjang(user)</code></pre>
+                    </section>
+
+                    <section id="database">
+                        <h2>💾 Database Operations</h2>
+                        
+                        <h3>Connect to Database</h3>
+                        <pre><code>// SQLite
+sambungDB("mydb", "sqlite", "database.db")
+
+// MySQL
+sambungDB("mysql_db", "mysql", "host=localhost;user=root;password=pass;database=mydb")
+
+// PostgreSQL
+sambungDB("pg_db", "postgresql", "host=localhost dbname=mydb user=postgres password=pass")</code></pre>
+
+                        <h3>Execute Queries</h3>
+                        <pre><code>// Create table
+create_sql = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, nama TEXT, email TEXT)"
+hasil = queryDB("mydb", create_sql)
+
+// Insert data
+insert_sql = "INSERT INTO users (nama, email) VALUES ('Ahmad', 'ahmad@example.com')"
+rows = queryDB("mydb", insert_sql)
+
+// Select data
+select_sql = "SELECT * FROM users"
+results = queryDB("mydb", select_sql)
+
+lapor teks(results)</code></pre>
+
+                        <h3>Close Connection</h3>
+                        <pre><code>tutupDB("mydb")</code></pre>
+
+                        <div class="warning">
+                            <strong>⚠️ Requirements:</strong> Install database drivers:
+                            <code>pip install mysql-connector-python psycopg2-binary</code>
+                        </div>
+                    </section>
+
+                    <section id="file-io">
+                        <h2>📁 File I/O Operations</h2>
+                        
+                        <h3>Write File</h3>
+                        <pre><code>content = "Laporan Proyek Hambalang\n"
+content = content + "Status: Mangkrak\n"
+tulisFile("laporan.txt", content)</code></pre>
+
+                        <h3>Read File</h3>
+                        <pre><code>isi = bacaFile("laporan.txt")
+lapor isi</code></pre>
+
+                        <h3>JSON Operations</h3>
+                        <pre><code>// Write JSON
+data = {
+    "proyek": "Hambalang",
+    "anggaran": 2500000000,
+    "status": "Mangkrak"
+}
+
+json_str = teks(data)
+tulisFile("data.json", json_str)
+
+// Read JSON
+json_content = bacaFile("data.json")
+lapor json_content</code></pre>
+                    </section>
+
+                    <section id="http">
+                        <h2>🌐 HTTP/API Operations</h2>
+                        
+                        <h3>GET Request</h3>
+                        <pre><code>url = "https://api.example.com/data"
+response = httpGet(url)
+
+lapor "Status: " + teks(response["status"])
+lapor "Body: " + response["body"]
+
+// Access JSON response
+jika response["json"] != kosong
+    lapor teks(response["json"])
+akhir</code></pre>
+
+                        <h3>POST Request</h3>
+                        <pre><code>url = "https://api.example.com/users"
+data = {
+    "nama": "Ahmad",
+    "email": "ahmad@example.com"
+}
+
+response = httpPost(url, data)
+lapor "Status: " + teks(response["status"])</code></pre>
+
+                        <div class="warning">
+                            <strong>⚠️ Requirement:</strong> Install requests library:
+                            <code>pip install requests</code>
+                        </div>
+                    </section>
+
+                    <section id="examples">
+                        <h2>📚 Examples</h2>
+                        
+                        <h3>Simple Calculator</h3>
+                        <div class="example">
+                            <pre><code>fungsi kalkulator(a, b, operasi)
+    jika operasi == "+"
+        kembalikan a + b
+    ataujika operasi == "-"
+        kembalikan a - b
+    ataujika operasi == "*"
+        kembalikan a * b
+    ataujika operasi == "/"
+        kembalikan a / b
+    atau
+        kembalikan 0
+    akhir
+akhir
+
+hasil = kalkulator(10, 5, "+")
+lapor "Hasil: " + teks(hasil)</code></pre>
+                        </div>
+
+                        <h3>CRUD Application</h3>
+                        <p>See: <code>examples/database_example.hl</code></p>
+
+                        <h3>File Processing</h3>
+                        <p>See: <code>examples/file_io_example.hl</code></p>
+
+                        <h3>REST API Client</h3>
+                        <p>See: <code>examples/http_api_example.hl</code></p>
+
+                        <h3>Algorithms</h3>
+                        <p>See: <code>examples/algorithms.hl</code></p>
+                    </section>
+
+                    <section id="api">
+                        <h2>🔧 API Reference</h2>
+                        
+                        <h3>Satire Functions</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Function</th>
+                                    <th>Parameters</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>Mangkrak(ms)</code></td>
+                                    <td>milliseconds (number)</td>
+                                    <td>Delay dengan random event (vendor kabur, audit KPK, dll)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Korupsi(persen)</code></td>
+                                    <td>percentage (0-100)</td>
+                                    <td>Mengurangi anggaran secara acak</td>
+                                </tr>
+                                <tr>
+                                    <td><code>RapatInfinite()</code></td>
+                                    <td>-</td>
+                                    <td>Infinite loop rapat (auto-stop setelah 5 iterasi)</td>
+                                </tr>
+                                <tr>
+                                    <td><code>selesai()</code></td>
+                                    <td>-</td>
+                                    <td>Terminate program dengan status "Selesai di atas kertas"</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3>Reserved Keywords</h3>
+                        <code>
+                            lapor, print, fungsi, akhir, kembalikan, jika, ataujika, atau, 
+                            selama, untuk, dari, sampai, dalam, hentikan, lanjut, benar, 
+                            salah, kosong, dan, atau, Mangkrak, Korupsi, RapatInfinite, selesai
+                        </code>
+
+                        <h3>Built-in Variables</h3>
+                        <ul>
+                            <li><code>anggaran</code> - Budget proyek (default: 1000000000)</li>
+                            <li><code>status_proyek</code> - Status administratif</li>
+                            <li><code>progress</code> - Progress persentase (0-100)</li>
+                        </ul>
+                    </section>
+
+                    <section id="deployment">
+                        <h2>🚀 Deployment</h2>
+                        
+                        <h3>Web Playground</h3>
+                        <pre><code>cd web
+npm install
+npm run dev
+
+# Build for production
+npm run build
+
+# Deploy to Vercel
+vercel</code></pre>
+
+                        <h3>Docker (Coming Soon)</h3>
+                        <pre><code>docker build -t hambalang .
+docker run -p 8080:8080 hambalang</code></pre>
+                    </section>
+
+                    <section id="contributing">
+                        <h2>🤝 Contributing</h2>
+                        <p>Contributions are welcome! Areas to contribute:</p>
+                        <ul>
+                            <li>New satire keywords & features</li>
+                            <li>Bug fixes & optimizations</li>
+                            <li>Documentation improvements</li>
+                            <li>Example programs</li>
+                            <li>Language extensions</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>HambaLang v2.0</strong> - Esoteric Programming Language</p>
+            <p>Satir Proyek Hambalang | MIT License</p>
+            <p>Made with 🇮🇩 for Indonesian Developer Community</p>
+            <p style="margin-top: 1rem;">
+                <a href="https://github.com/yourusername/hambalang" style="color: white;">GitHub</a> •
+                <a href="https://twitter.com/yourhandle" style="color: white;">Twitter</a> •
+                <a href="mailto:your@email.com" style="color: white;">Contact</a>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
