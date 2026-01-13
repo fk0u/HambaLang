@@ -1,0 +1,51 @@
+lapor "🎯 CTF CHALLENGE: Budget Perfect Balance"
+lapor "Goal: Anggaran harus tepat 0 di akhir eksekusi"
+lapor "================================================"
+
+mulai
+    set progress = 0
+    lapor "💰 Anggaran awal: " + anggaran
+    
+    lapor "📋 Fase 1: Perencanaan..."
+    Korupsi(5)
+    set progress = progress + 10
+    lapor "Progress: " + progress
+    
+    lapor "📋 Fase 2: Eksekusi..."
+    Rapat(3)
+        Korupsi(8)
+        set progress = progress + 15
+        lapor "Progress: " + progress
+    selesaiRapat
+    
+    lapor "📋 Fase 3: Testing..."
+    coba
+        jika progress < 80
+            set progress = progress + 20
+            Korupsi(12)
+            lapor "Testing selesai, progress: " + progress
+        akhir
+    jikaGagal
+        lapor "⚠️ Testing gagal!"
+    akhirCoba
+    
+    lapor "📋 Fase 4: Deployment..."
+    jika progress >= 80
+        Korupsi(15)
+        set progress = 100
+        lapor "✅ Proyek selesai!"
+    akhir
+    
+    lapor "================================================"
+    lapor "📊 Anggaran akhir: " + anggaran
+    lapor "📈 Progress: " + progress
+    
+    jika anggaran == 0
+        jika progress >= 100
+            lapor "🚩 FLAG UNLOCKED!"
+        akhir
+    akhir
+akhir
+
+lapor "Hint: Gunakan --seed untuk eksekusi deterministik"
+lapor "Hint: Coba seed 42, 1337, atau 31337"

@@ -1,0 +1,4 @@
+lapor "Debug test"
+set x = 5
+set y = x + 3
+lapor y

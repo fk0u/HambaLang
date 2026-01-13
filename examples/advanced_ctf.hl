@@ -1,0 +1,46 @@
+// HambaLang CTF/Puzzle Demo
+// Goal: Selesaikan proyek tanpa habis anggaran, temukan FLAG tersembunyi.
+
+lapor "=== HAMBALANG CTF MODE ==="
+set anggaran = 500000000
+set progress = 0
+
+// Strategi: Korupsi kecil, progress dinaikkan lewat rapat dan tugas
+Rapat(5)
+  set progress = progress + 10
+selesaiRapat
+
+prosedur Hemat()
+  lapor "Menekan biaya"
+  set anggaran = anggaran - 5000000
+akhirProsedur
+
+prosedur Bocor()
+  Korupsi(9) // kecil supaya tidak bangkrut
+akhirProsedur
+
+// Jalankan kombinasi
+Hemat()
+Bocor()
+Hemat()
+Bocor()
+
+set finalProgress = progress
+lapor "Progress: 50%"
+lapor "Anggaran tersisa masih aman"
+
+coba
+  jika progress < 80
+    Mangkrak("Proyek belum 80%")
+  akhir
+jikaGagal
+  lapor "Dilanjutkan dengan emergency meeting"
+  Rapat(3)
+    set progress = progress + 8
+  selesaiRapat
+akhirCoba
+
+lapor "Progress akhir mencapai target"
+lapor "Anggaran masih tersisa"
+
+// Hint: jalankan dengan --ctf --seed 42 dan mainkan kombinasi Korupsi()

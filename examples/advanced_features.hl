@@ -1,0 +1,42 @@
+// HambaLang Advanced Feature Demo (Phase 2)
+// Scoped blocks, prosedur, Rapat(n), try-catch, satirical errors, CTF-friendly.
+
+lapor "=== HAMBALANG ADVANCED DEMO ==="
+
+// Scoped block with local variables
+mulai
+  set nama = "Stadion Hambalang"
+  set anggaran = 2000000000
+  lapor "Perencanaan: " + nama
+  Korupsi(10)
+akhir
+
+// Controlled meeting loop
+lapor "Rapat terjadwal 3x"
+Rapat(3)
+  lapor "Rapat koordinasi"
+  set progress = progress + 5
+selesaiRapat
+
+// Procedure without return
+prosedur Audit()
+  lapor "Audit: Dimulai"
+  Korupsi(5)
+  lapor "Audit: Selesai"
+akhirProsedur
+
+Audit()
+
+// Try-catch satire
+coba
+  lapor "Simulasi Mangkrak"
+  Mangkrak("Jalan Tol")
+jikaGagal
+  lapor "Diselamatkan dengan rapat darurat"
+  Rapat(2)
+    lapor "Rapat darurat diadakan"
+  selesaiRapat
+akhirCoba
+
+set finalProgress = progress
+lapor "Progres akhir: " + teks(finalProgress)

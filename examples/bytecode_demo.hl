@@ -1,0 +1,57 @@
+// Demonstrasi fitur bytecode & VM
+// Menunjukkan semua opcode yang didukung HambaVM
+
+lapor "🚀 HambaVM Bytecode Demo"
+lapor "Testing all opcodes..."
+lapor "======================================"
+
+mulai
+    // Stack operations (PUSH, POP, LOAD, STORE)
+    lapor "📚 Test 1: Variabel & Aritmatika"
+    set x = 10
+    set y = 5
+    set hasil = x + y * 2
+    lapor "x=" + x + ", y=" + y + ", x+y*2=" + hasil
+    
+    // Control flow (JUMP, JUMP_IF_FALSE)
+    lapor "📚 Test 2: Conditional (OP_JUMP_IF_FALSE)"
+    jika hasil > 15
+        lapor "✓ Hasil lebih besar dari 15"
+        set status = "OK"
+    akhir
+    
+    // Loop (RAPAT with loop counter)
+    lapor "📚 Test 3: Loop (OP_RAPAT)"
+    set counter = 0
+    Rapat(4)
+        set counter = counter + 1
+        lapor "  Loop iterasi: " + counter
+    selesaiRapat
+    
+    // Korupsi opcode (OP_KORUPSI)
+    lapor "📚 Test 4: Korupsi (OP_KORUPSI)"
+    lapor "Anggaran sebelum: " + anggaran
+    Korupsi(10)
+    lapor "Anggaran sesudah: " + anggaran
+    
+    // Exception handling
+    lapor "📚 Test 5: Exception Handling"
+    coba
+        set progress = progress + 30
+        jika progress < 50
+            lapor "Progress masih kurang..."
+        akhir
+    jikaGagal
+        lapor "❌ Terjadi error"
+    akhirCoba
+    
+    // Final state
+    lapor "======================================"
+    lapor "✅ Semua opcode test berhasil!"
+    lapor "📊 Final state:"
+    lapor "   Anggaran: " + anggaran
+    lapor "   Progress: " + progress
+akhir
+
+lapor "Compile dengan: hambalang compile bytecode_demo.hl"
+lapor "Run bytecode: hambalang run bytecode_demo.hbc --debug"

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HambaLang Advanced Playground</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        .panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel h2 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        #editor {
+            flex: 1;
+            min-height: 500px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        #output {
+            flex: 1;
+            min-height: 500px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            background: #0a0a0a;
+            color: #00ff00;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        button {
+            padding: 12px 24px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover { background: #1e3c72; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="range"] {
+            width: 150px;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-group label {
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .status {
+            padding: 10px 15px;
+            background: #e8f4f8;
+            border-left: 4px solid #2a5298;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        @media (max-width: 768px) {
+            .main { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ HambaLang Advanced Playground</h1>
+            <p>Esoteric Programming Language dengan Satire Birokrasi Indonesia</p>
+        </div>
+        
+        <div class="main">
+            <div class="panel">
+                <h2>📝 Kode HambaLang (.hl)</h2>
+                <textarea id="editor" spellcheck="false">// HambaLang Advanced Demo
+lapor "=== DEMO ADVANCED ==="
+
+set proyek = "Stadion Hambalang"
+set anggaran = 2000000000
+
+mulai
+  lapor "Proyek: " + proyek
+  lapor "Anggaran: Rp " + teks(anggaran)
+  
+  Korupsi(15)
+akhir
+
+Rapat(3)
+  lapor "Rapat koordinasi"
+  set progress = progress + 10
+selesaiRapat
+
+prosedur LaporanAkhir()
+  lapor "\n[Laporan] Progress: " + teks(progress) + "%"
+  lapor "[Laporan] Anggaran: Rp " + teks(anggaran)
+akhirProsedur
+
+LaporanAkhir()
+
+coba
+  jika progress < 50
+    Mangkrak("Progress kurang")
+  akhir
+jikaGagal
+  lapor "Diselamatkan dengan rapat darurat!"
+akhirCoba
+
+lapor "\n=== SELESAI ==="</textarea>
+                
+                <div class="controls">
+                    <button id="runBtn">▶ Jalankan</button>
+                    <button id="clearBtn">🗑️ Clear</button>
+                    <select id="exampleSelect">
+                        <option value="">-- Pilih Contoh --</option>
+                        <option value="basic">Basic Features</option>
+                        <option value="nested">Nested Scopes</option>
+                        <option value="ctf">CTF Challenge</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <div class="slider-group">
+                        <label>⚡ Speed:</label>
+                        <input type="range" id="speedSlider" min="0" max="100" value="0">
+                        <span id="speedLabel">0ms</span>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="debugCheck">
+                        <label for="debugCheck">🐛 Debug Mode</label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="ctfCheck">
+                        <label for="ctfCheck">🚩 CTF Mode</label>
+                    </div>
+                </div>
+                
+                <div class="status" id="status">
+                    Siap untuk menjalankan kode HambaLang
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>📺 Output Eksekusi</h2>
+                <div id="output">Menunggu eksekusi...</div>
+                <div class="controls">
+                    <button id="clearOutputBtn">🗑️ Clear Output</button>
+                    <button id="shareBtn">🔗 Share Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const output = document.getElementById('output');
+        const runBtn = document.getElementById('runBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const clearOutputBtn = document.getElementById('clearOutputBtn');
+        const exampleSelect = document.getElementById('exampleSelect');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedLabel = document.getElementById('speedLabel');
+        const debugCheck = document.getElementById('debugCheck');
+        const ctfCheck = document.getElementById('ctfCheck');
+        const status = document.getElementById('status');
+        const shareBtn = document.getElementById('shareBtn');
+
+        const examples = {
+            basic: `lapor "=== BASIC FEATURES ==="
+set nama = "Proyek Hambalang"
+set budget = 2500000000
+
+lapor "Nama: " + nama
+lapor "Budget: Rp " + teks(budget)
+
+Korupsi(20)
+lapor "Budget setelah korupsi: Rp " + teks(anggaran)`,
+            
+            nested: `lapor "=== NESTED SCOPES ==="
+
+mulai
+  set outer = "Luar"
+  lapor "Scope 1: " + outer
+  
+  mulai
+    set inner = "Dalam"
+    lapor "Scope 2: " + inner + ", " + outer
+  akhir
+  
+  lapor "Kembali ke Scope 1: " + outer
+akhir
+
+lapor "Global scope"`,
+            
+            ctf: `// CTF Challenge: Selesaikan tanpa bangkrut!
+lapor "=== CTF MODE ==="
+set anggaran = 500000000
+
+Rapat(10)
+  set progress = progress + 8
+  Korupsi(4)
+selesaiRapat
+
+lapor "Progress: " + teks(progress) + "%"
+lapor "Anggaran: Rp " + teks(anggaran)`
+        };
+
+        speedSlider.addEventListener('input', () => {
+            const val = speedSlider.value;
+            speedLabel.textContent = val + 'ms';
+        });
+
+        exampleSelect.addEventListener('change', () => {
+            const example = exampleSelect.value;
+            if (example && examples[example]) {
+                editor.value = examples[example];
+                status.textContent = `Loaded example: ${example}`;
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            editor.value = '';
+            status.textContent = 'Editor cleared';
+        });
+
+        clearOutputBtn.addEventListener('click', () => {
+            output.textContent = 'Menunggu eksekusi...';
+        });
+
+        shareBtn.addEventListener('click', () => {
+            const code = editor.value;
+            const encoded = btoa(encodeURIComponent(code));
+            const url = `${window.location.origin}${window.location.pathname}?code=${encoded}`;
+            navigator.clipboard.writeText(url).then(() => {
+                status.textContent = '🔗 URL copied to clipboard!';
+                setTimeout(() => {
+                    status.textContent = 'Siap untuk menjalankan kode HambaLang';
+                }, 3000);
+            });
+        });
+
+        // Load code from URL if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const codeParam = urlParams.get('code');
+        if (codeParam) {
+            try {
+                const decoded = decodeURIComponent(atob(codeParam));
+                editor.value = decoded;
+                status.textContent = 'Loaded code from shared link';
+            } catch (e) {
+                console.error('Failed to decode shared code:', e);
+            }
+        }
+
+        runBtn.addEventListener('click', async () => {
+            const code = editor.value;
+            const delay = parseInt(speedSlider.value);
+            const debug = debugCheck.checked;
+            const ctf = ctfCheck.checked;
+            
+            output.textContent = 'Menjalankan...\n\n';
+            runBtn.disabled = true;
+            status.textContent = '⏳ Executing...';
+            
+            try {
+                await executeHambaLang(code, delay, debug, ctf);
+                status.textContent = '✅ Eksekusi selesai';
+            } catch (e) {
+                output.textContent += '\n❌ ERROR: ' + e.message;
+                status.textContent = '❌ Execution error';
+            } finally {
+                runBtn.disabled = false;
+            }
+        });
+
+        async function executeHambaLang(code, delay, debug, ctf) {
+            // Simple interpreter implementation (client-side)
+            const lines = code.split('\n');
+            const runtime = {
+                vars: { anggaran: 1000000000, progress: 0, tahun: 2011 },
+                procedures: {},
+                korupsiTotal: 0,
+                steps: 0,
+                stepLimit: 2000
+            };
+            
+            let pos = 0;
+            
+            async function tick() {
+                runtime.steps++;
+                if (runtime.steps > runtime.stepLimit) {
+                    throw new Error('Batas langkah terlampaui');
+                }
+                if (delay > 0) {
+                    await new Promise(r => setTimeout(r, delay));
+                }
+            }
+            
+            function evalExpr(expr) {
+                expr = expr.trim();
+                // String literal
+                if ((expr.startsWith('"') && expr.endsWith('"')) || 
+                    (expr.startsWith("'") && expr.endsWith("'"))) {
+                    return expr.slice(1, -1);
+                }
+                // Number
+                if (!isNaN(expr)) return parseFloat(expr);
+                // Function calls
+                const funcMatch = expr.match(/^(\w+)\((.+)\)$/);
+                if (funcMatch) {
+                    const name = funcMatch[1];
+                    const arg = evalExpr(funcMatch[2]);
+                    if (name === 'teks') return String(arg);
+                    if (name === 'angka') return parseFloat(arg);
+                }
+                // Arithmetic
+                if (expr.includes('+')) {
+                    const parts = expr.split('+');
+                    const l = evalExpr(parts[0]);
+                    const r = evalExpr(parts.slice(1).join('+'));
+                    return String(l) + String(r);
+                }
+                if (expr.includes('<')) {
+                    const [l, r] = expr.split('<');
+                    return evalExpr(l) < evalExpr(r);
+                }
+                // Variable
+                if (runtime.vars[expr] !== undefined) return runtime.vars[expr];
+                return expr;
+            }
+            
+            async function execute(startPos, endKeyword = null) {
+                while (pos < lines.length) {
+                    let line = lines[pos].trim();
+                    pos++;
+                    
+                    if (!line || line.startsWith('//')) continue;
+                    if (endKeyword && line === endKeyword) break;
+                    
+                    await tick();
+                    
+                    if (debug) {
+                        output.textContent += `[DEBUG L${pos}] ${line}\n`;
+                    }
+                    
+                    // lapor
+                    if (line.startsWith('lapor ')) {
+                        const msg = evalExpr(line.slice(6));
+                        output.textContent += msg + '\n';
+                        output.scrollTop = output.scrollHeight;
+                    }
+                    // set
+                    else if (line.startsWith('set ')) {
+                        const match = line.match(/^set\s+(\w+)\s*=\s*(.+)$/);
+                        if (match) {
+                            runtime.vars[match[1]] = evalExpr(match[2]);
+                        }
+                    }
+                    // Korupsi
+                    else if (line.startsWith('Korupsi(')) {
+                        const percent = parseFloat(line.match(/Korupsi\((.+)\)/)[1]);
+                        const amount = runtime.vars.anggaran * (percent / 100);
+                        runtime.vars.anggaran -= amount;
+                        runtime.korupsiTotal += amount;
+                        output.textContent += `💰 Korupsi ${percent}%: Rp ${Math.floor(amount).toLocaleString()}\n`;
+                        
+                        if (ctf && Math.floor(runtime.korupsiTotal) % 424242 === 0) {
+                            output.textContent += '\n🚩 FLAG{hambalang_ctf_korupsi}\n\n';
+                        }
+                    }
+                    // mulai block
+                    else if (line === 'mulai') {
+                        await execute(pos, 'akhir');
+                    }
+                    // Rapat loop
+                    else if (line.startsWith('Rapat(')) {
+                        const count = parseInt(line.match(/Rapat\((.+)\)/)[1]);
+                        const loopStart = pos;
+                        for (let i = 0; i < count; i++) {
+                            pos = loopStart;
+                            await execute(pos, 'selesaiRapat');
+                        }
+                    }
+                    // prosedur def
+                    else if (line.startsWith('prosedur ')) {
+                        const name = line.match(/prosedur\s+(\w+)\s*\(\)/)[1];
+                        const procStart = pos;
+                        const procLines = [];
+                        while (pos < lines.length && lines[pos].trim() !== 'akhirProsedur') {
+                            procLines.push(lines[pos]);
+                            pos++;
+                        }
+                        pos++; // skip akhirProsedur
+                        runtime.procedures[name] = procLines;
+                    }
+                    // prosedur call
+                    else if (line.match(/^(\w+)\(\)$/)) {
+                        const name = line.match(/^(\w+)\(\)$/)[1];
+                        if (runtime.procedures[name]) {
+                            const savedPos = pos;
+                            const procCode = runtime.procedures[name].join('\n');
+                            const savedLines = lines.slice();
+                            const tempLines = procCode.split('\n');
+                            lines.splice(pos, 0, ...tempLines);
+                            await execute(pos, null);
+                            pos = savedPos;
+                        }
+                    }
+                    // coba
+                    else if (line === 'coba') {
+                        const tryStart = pos;
+                        try {
+                            await execute(pos, 'jikaGagal');
+                            // Skip catch block
+                            while (pos < lines.length && lines[pos].trim() !== 'akhirCoba') {
+                                pos++;
+                            }
+                            pos++;
+                        } catch (e) {
+                            output.textContent += `⚠️ Exception: ${e.message}\n`;
+                            await execute(pos, 'akhirCoba');
+                        }
+                    }
+                    // Mangkrak
+                    else if (line.startsWith('Mangkrak(')) {
+                        const info = evalExpr(line.match(/Mangkrak\((.+)\)/)[1]);
+                        output.textContent += `⏳ Proyek Mangkrak: ${info}\n`;
+                        throw new Error('Proyek mangkrak terlalu lama');
+                    }
+                    // jika
+                    else if (line.startsWith('jika ')) {
+                        const cond = evalExpr(line.slice(5));
+                        if (!cond) {
+                            while (pos < lines.length && lines[pos].trim() !== 'akhir') {
+                                pos++;
+                            }
+                            pos++;
+                        }
+                    }
+                    // akhir
+                    else if (line === 'akhir') {
+                        break;
+                    }
+                }
+            }
+            
+            await execute(0);
+        }
+    </script>
+</body>
+</html>

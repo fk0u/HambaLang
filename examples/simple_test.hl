@@ -1,0 +1,16 @@
+lapor "🚀 HambaVM Simple Test"
+
+mulai
+    set x = 10
+    set y = 20
+    set hasil = x + y
+    lapor "10 + 20 = 30"
+    lapor hasil
+    
+    jika hasil == 30
+        lapor "✓ Test passed!"
+    akhir
+akhir
+
+lapor "Compile: hambalang compile simple_test.hl"
+lapor "Run: hambalang run simple_test.hbc"

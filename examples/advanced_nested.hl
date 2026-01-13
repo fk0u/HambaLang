@@ -1,0 +1,94 @@
+// Advanced Nested Scope & Complex Logic Demo
+// Mendemonstrasikan nested scopes, prosedur kompleks, dan exception handling
+
+lapor "=== NESTED SCOPE & COMPLEX LOGIC ==="
+
+set globalBudget = 5000000000
+set globalProgress = 0
+
+// Nested scope dengan multiple levels
+mulai
+  set phase = "Perencanaan"
+  set localBudget = 2000000000
+  
+  lapor "[Global] Budget: " + teks(globalBudget)
+  lapor "[Phase 1] " + phase + " - Budget: " + teks(localBudget)
+  
+  mulai
+    set subPhase = "Tender"
+    set tenderCost = 100000000
+    lapor "  [SubPhase] " + subPhase + " - Cost: " + teks(tenderCost)
+    
+    Korupsi(5)
+    set globalProgress = globalProgress + 10
+  akhir
+  
+  lapor "[Phase 1] Progress: " + teks(globalProgress) + "%"
+akhir
+
+// Complex procedure with nested logic
+prosedur ProsesAudit()
+  lapor "\n[Audit] Memulai audit komprehensif"
+  
+  coba
+    mulai
+      set auditScore = 45
+      lapor "[Audit] Score: " + teks(auditScore)
+      
+      jika auditScore < 50
+        Mangkrak("Audit score terlalu rendah")
+      akhir
+    akhir
+  jikaGagal
+    lapor "[Audit] Ditemukan masalah - melakukan rapat darurat"
+    Rapat(2)
+      set globalProgress = globalProgress + 5
+      lapor "  Rapat perbaikan ke-" + teks(globalProgress)
+    selesaiRapat
+  akhirCoba
+  
+  lapor "[Audit] Audit selesai"
+akhirProsedur
+
+prosedur OptimisasiBudget()
+  lapor "\n[Optimisasi] Mengoptimalkan penggunaan anggaran"
+  
+  Rapat(3)
+    set globalProgress = globalProgress + 3
+    Korupsi(2)
+  selesaiRapat
+  
+  lapor "[Optimisasi] Selesai - Progress: " + teks(globalProgress) + "%"
+akhirProsedur
+
+// Execute procedures
+ProsesAudit()
+OptimisasiBudget()
+
+// Final nested try-catch with procedures
+coba
+  mulai
+    lapor "\n[Final Check] Memverifikasi penyelesaian"
+    
+    jika globalProgress < 50
+      ProsesAudit()
+    akhir
+    
+    jika globalProgress < 70
+      OptimisasiBudget()
+    akhir
+    
+    jika globalProgress < 100
+      Mangkrak("Progress masih kurang")
+    akhir
+  akhir
+jikaGagal
+  lapor "[Recovery] Menjalankan recovery procedures"
+  Rapat(5)
+    set globalProgress = globalProgress + 8
+  selesaiRapat
+akhirCoba
+
+lapor "\n=== HASIL AKHIR ==="
+lapor "Progress: " + teks(globalProgress) + "%"
+lapor "Anggaran tersisa: " + teks(anggaran)
