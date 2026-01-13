@@ -1,0 +1,41 @@
+lapor "🔥 HELL MODE CTF - Ultimate Challenge 🔥"
+lapor "Unlock all 4 stages to get complete flag"
+lapor "=================================================="
+
+mulai
+    set progress = 0
+    set target = 100
+    
+    lapor "Stage 1: Speed + Perfect Budget"
+    Korupsi(11)
+    set progress = progress + 25
+    lapor "Progress: " + progress
+    
+    lapor "Stage 2: Prime Number Theory"
+    Korupsi(13)
+    set progress = progress + 25
+    lapor "Progress: " + progress
+    
+    lapor "Stage 3: Opcode Pattern"
+    Korupsi(17)
+    set progress = progress + 25
+    lapor "Progress: " + progress
+    
+    lapor "Stage 4: No Debug Mode"
+    Korupsi(19)
+    set progress = progress + 25
+    lapor "Progress: " + progress
+    
+    jika progress >= target
+        jika anggaran == 0
+            lapor "✅ All conditions met!"
+            lapor "Checking stages..."
+        akhir
+    akhir
+akhir
+
+lapor "=================================================="
+lapor "Hint 1: Total steps must be < 50"
+lapor "Hint 2: Korupsi total must be prime"
+lapor "Hint 3: Opcode sequence matters"
+lapor "Hint 4: Debug mode = instant fail"

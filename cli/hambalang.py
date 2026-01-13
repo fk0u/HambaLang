@@ -49,18 +49,33 @@ def cmd_run(args):
     ext = Path(filepath).suffix
     
     if ext == '.hbc':
-        # Run bytecode
-        from vm.hamba_vm import run_bytecode_file
-        print_header("🚀 HambaVM - Bytecode Execution")
-        success = run_bytecode_file(
-            filepath,
-            debug=args.debug,
-            seed=args.seed,
-            ctf_mode=args.ctf,
-            step_limit=args.step_limit,
-            delay=args.delay
-        )
-        return 0 if success else 1
+        # Run bytecode (with obfuscation support)
+        use_obfuscated = getattr(args, 'obfuscated', False)
+        paranoia = getattr(args, 'paranoia', 1)
+        hell_mode = getattr(args, 'hell', False)
+        
+        if use_obfuscated or paranoia > 0 or hell_mode:
+            from compiler.bytecode import Bytecode
+            from vm.obfuscated_vm import ObfuscatedVM
+            
+            print_header("🔒 ObfuscatedVM - Protected Execution")
+            bytecode = Bytecode.load(filepath)
+            vm = ObfuscatedVM(bytecode, seed=args.seed, step_limit=args.step_limit,
+                            debug=args.debug, paranoia=paranoia, obfuscated=use_obfuscated)
+            success = vm.run(delay=args.delay, ctf_mode=args.ctf, hell_mode=hell_mode)
+            return 0 if success else 1
+        else:
+            from vm.hamba_vm import run_bytecode_file
+            print_header("🚀 HambaVM - Bytecode Execution")
+            success = run_bytecode_file(
+                filepath,
+                debug=args.debug,
+                seed=args.seed,
+                ctf_mode=args.ctf,
+                step_limit=args.step_limit,
+                delay=args.delay
+            )
+            return 0 if success else 1
     
     elif ext == '.hl':
         # Run source (via interpreter or compile first)
