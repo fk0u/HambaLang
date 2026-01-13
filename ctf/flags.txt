@@ -1,0 +1,3 @@
+HLCTF{anggaran_bocor_halus}
+HLCTF{birokrasi_berbelit_tapi_cuan}
+HLCTF{reverse_engineer_plat_merah}

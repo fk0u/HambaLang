@@ -1,0 +1,18 @@
+Rapat
+    Wacana "Demo CTF: Login Sederhana"
+    
+    Anggaran rahasia = 12345
+    Anggaran input = 0
+    
+    Korupsi "=== SYSTEM LOGIN E-KTP ==="
+    Korupsi "Masukkan NIK (yang sebenarnya password):"
+    Tagih input
+    
+    Sita input == rahasia {
+        Korupsi "Login Berhasil!"
+        Korupsi "Anda terdaftar sebagai penerima bansos."
+    } Pengadilan {
+        Korupsi "Login Gagal!"
+        Korupsi "Data anda tidak ditemukan (atau sengaja dihilangkan)."
+    }
+Bubarkan

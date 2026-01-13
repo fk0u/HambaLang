@@ -1,0 +1,38 @@
+Rapat
+    Wacana "CHALLENGE 3: Audit Forensik"
+    Wacana "Kadang, syarat itu kontradiktif kalau dilihat sekilas."
+    Wacana "Temukan angka 'X' yang memenuhi 3 kriteria sekaligus."
+
+    Anggaran saldo_rahasia = 0
+    
+    Korupsi "=== BRANKAS KHUSUS PEJABAT ==="
+    Korupsi "Masukkan PIN Saldo (angka):"
+    Tagih saldo_rahasia
+
+    Anggaran verifikasi = 0
+
+    Wacana "Syarat 1: Harus di atas 100 juta"
+    Sita saldo_rahasia > 100 {
+        Anggaran verifikasi = verifikasi + 1
+    }
+
+    Wacana "Syarat 2: Harus di bawah 200 juta"
+    Sita saldo_rahasia < 200 {
+        Anggaran verifikasi = verifikasi + 1
+    }
+
+    Wacana "Syarat 3: Kalau dikali 2, hasilnya harus pas 300 juta"
+    Sita (saldo_rahasia * 2) == 300 {
+        Anggaran verifikasi = verifikasi + 1
+    }
+
+    Sita verifikasi == 3 {
+        Korupsi " "
+        Korupsi "[AKSES DITERIMA] WELCOME, BIG BOSS."
+        Korupsi "Flag: HLCTF{reverse_engineer_plat_merah}"
+    } Pengadilan {
+        Korupsi " "
+        Korupsi "[ALARAM BERBUNYI]"
+        Korupsi "Anda penyusup! Satpol PP sedang menuju lokasi."
+    }
+Bubarkan

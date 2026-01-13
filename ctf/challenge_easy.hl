@@ -1,0 +1,28 @@
+Rapat
+    Wacana "CHALLENGE 1: Pelicin Anggaran"
+    Wacana "Cari tahu berapa nominal 'dana taktis' yang harus disetor agar proyek cair."
+
+    Anggaran target = 1337
+    Anggaran setoran = 0
+
+    Korupsi "=== DINAAS PENGELOLAAN ANGGARAN RAHASIA ==="
+    Korupsi "Masukkan nominal setoran (integer):"
+    
+    Tagih setoran
+
+    Sita setoran == target {
+        Korupsi " "
+        Korupsi "[STATUS] ACC DEWAN"
+        Korupsi "Selamat! Dana pelicin diterima dengan baik."
+        Korupsi "Flag: HLCTF{anggaran_bocor_halus}"
+    } Pengadilan {
+        Korupsi " "
+        Korupsi "[STATUS] DITOLAK"
+        Korupsi "Nominal tidak sesuai kesepakatan belakang layar!"
+        Sita setoran < target {
+            Korupsi "Kurang banyak bos!"
+        } Pengadilan {
+            Korupsi "Kebanyakan, nanti dicurigai KPK!"
+        }
+    }
+Bubarkan

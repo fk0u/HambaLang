@@ -1,0 +1,39 @@
+Rapat
+    Wacana "CHALLENGE 2: Alur Birokrasi"
+    Wacana "Birokrasi itu rumit. Satu langkah salah, berkas kembali ke awal."
+    Wacana "Hint: Collatz Conjecture tapi budget terbatas."
+
+    Anggaran berkas_id = 0
+    
+    Korupsi "=== LOKET PENGURUSAN IZIN (LT 2) ==="
+    Korupsi "Masukkan ID Berkas Awal (angka):"
+    Tagih berkas_id
+
+    Anggaran putaran = 0
+    Anggaran max_putaran = 5
+    
+    Proyek putaran < max_putaran {
+        Wacana "Proses verifikasi meja ke meja..."
+        
+        Sita (berkas_id % 2) == 0 {
+            Anggaran berkas_id = berkas_id / 2
+        } Pengadilan {
+            Anggaran berkas_id = (berkas_id * 3) + 1
+        }
+        
+        Anggaran putaran = putaran + 1
+    }
+
+    Sita berkas_id == 1 {
+        Korupsi " "
+        Korupsi "[STATUS] IZIN TERBIT"
+        Korupsi "Luar biasa, Anda mengikuti prosedur (yang kami buat-buat) dengan tepat."
+        Korupsi "Flag: HLCTF{birokrasi_berbelit_tapi_cuan}"
+    } Pengadilan {
+        Korupsi " "
+        Korupsi "[STATUS] BERKAS HILANG"
+        Korupsi "Maaf, ID berkas Anda nyangkut di meja fotokopi."
+        Korupsi "Nilai akhir berkas: "
+        Korupsi berkas_id
+    }
+Bubarkan
