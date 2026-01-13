@@ -1,0 +1,71 @@
+program         ::= "Rapat" statement_list "Bubarkan"
+
+statement_list  ::= statement*
+
+statement       ::= var_declaration
+                  | assignment
+                  | print_stmt
+                  | io_stmt
+                  | error_stmt
+                  | if_stmt
+                  | while_stmt
+                  | proc_def
+                  | function_call
+                  | comment_stmt
+                  | ";"
+
+var_declaration ::= "Anggaran" identifier "=" expression
+
+assignment      ::= identifier "=" expression
+
+print_stmt      ::= "Korupsi" expression
+
+io_stmt         ::= "Tagih" identifier
+
+error_stmt      ::= "Mangkrak" expression?
+
+if_stmt         ::= "Sita" expression "{" statement_list "}" 
+                    ( "Pengadilan" "{" statement_list "}" )?
+
+while_stmt      ::= "Proyek" expression "{" statement_list "}"
+
+proc_def        ::= "BagiRata" identifier "(" param_list? ")" "{" statement_list "}"
+param_list      ::= identifier ("," identifier)*
+
+function_call   ::= "Janji" identifier "(" arg_list? ")"
+arg_list        ::= expression ("," expression)*
+
+comment_stmt    ::= "Wacana" string_literal
+
+/* Expressions */
+
+expression      ::= logical_or_expr
+
+logical_or_expr ::= logical_and_expr ( "ATAU" logical_and_expr )*
+
+logical_and_expr ::= equality_expr ( "DAN" equality_expr )*
+
+equality_expr   ::= relational_expr ( ( "==" | "!=" ) relational_expr )*
+
+relational_expr ::= additive_expr ( ( "<" | ">" | "<=" | ">=" ) additive_expr )*
+
+additive_expr   ::= multiplicative_expr ( ( "+" | "-" ) multiplicative_expr )*
+
+multiplicative_expr ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
+
+unary_expr      ::= ( "-" | "!" ) unary_expr
+                  | primary_expr
+
+primary_expr    ::= identifier
+                  | literal
+                  | "(" expression ")"
+                  | function_call
+
+/* Terminals */
+
+identifier      ::= [a-zA-Z_] [a-zA-Z0-9_]*
+literal         ::= integer_literal | string_literal | float_literal | boolean_literal
+integer_literal ::= [0-9]+
+float_literal   ::= [0-9]+ "." [0-9]+
+string_literal  ::= '"' [^"]* '"'
+boolean_literal ::= "BENAR" | "SALAH"

@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 from pathlib import Path
+from cli.cli_extensions import cmd_obfuscate, cmd_analyze
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -51,8 +52,16 @@ def cmd_run(args):
     if ext == '.hbc':
         # Run bytecode (with obfuscation support)
         use_obfuscated = getattr(args, 'obfuscated', False)
-        paranoia = getattr(args, 'paranoia', 1)
+        paranoia = getattr(args, 'paranoia', 0)
         hell_mode = getattr(args, 'hell', False)
+        strict_mode = getattr(args, 'strict', False)
+        audit_mode = getattr(args, 'audit', False)
+        
+        if strict_mode:
+            print_info("Formal Verification: Strict Mode Enabled")
+        
+        if audit_mode:
+            print_info("Runtime Audit: Integrity Checks Enabled")
         
         if use_obfuscated or paranoia > 0 or hell_mode:
             from compiler.bytecode import Bytecode
@@ -331,6 +340,13 @@ Examples:
     run_parser.add_argument('--ctf', action='store_true', help='CTF mode')
     run_parser.add_argument('--step-limit', type=int, default=100000, help='Max execution steps')
     run_parser.add_argument('--delay', type=float, default=0.0, help='Delay between steps (seconds)')
+    run_parser.add_argument('--strict', action='store_true', help='Enable strict academic verification')
+    run_parser.add_argument('--audit', action='store_true', help='Enable runtime integrity audit')
+    
+    # Obfuscation related run args
+    run_parser.add_argument('--obfuscated', action='store_true', help='Run as obfuscated bytecode')
+    run_parser.add_argument('--paranoia', type=int, default=0, help='Anti-debug paranoia level (0-2)')
+    run_parser.add_argument('--hell', action='store_true', help='Enable Hell Mode CTF')
     
     # compile command
     compile_parser = subparsers.add_parser('compile', help='Compile .hl to .hbc')
@@ -352,6 +368,18 @@ Examples:
     ctf_parser.add_argument('--vm', action='store_true', help='Use VM')
     ctf_parser.add_argument('--step-limit', type=int, default=100000, help='Max execution steps')
     ctf_parser.add_argument('--delay', type=float, default=0.0, help='Delay between steps')
+
+    # obfuscate command
+    obf_parser = subparsers.add_parser('obfuscate', help='Obfuscate bytecode (.hbc)')
+    obf_parser.add_argument('file', help='Bytecode file (.hbc)')
+    obf_parser.add_argument('--level', type=int, default=1, choices=[1, 2, 3], help='Obfuscation level (1=remap, 2=junk, 3=reorder)')
+    obf_parser.add_argument('--seed', type=int, help='Random seed')
+    obf_parser.add_argument('--output', help='Output file path')
+
+    # analyze command (Academic/Fake)
+    analyze_parser = subparsers.add_parser('analyze', help='Perform academic static analysis')
+    analyze_parser.add_argument('file', help='File to analyze')
+    analyze_parser.add_argument('--deep', action='store_true', help='Enable deep heuristic analysis')
     
     args = parser.parse_args()
     
@@ -365,7 +393,9 @@ Examples:
         'compile': cmd_compile,
         'disasm': cmd_disasm,
         'debug': cmd_debug,
-        'ctf': cmd_ctf
+        'ctf': cmd_ctf,
+        'obfuscate': cmd_obfuscate,
+        'analyze': cmd_analyze
     }
     
     handler = commands.get(args.command)

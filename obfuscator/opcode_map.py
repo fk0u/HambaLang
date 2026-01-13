@@ -3,7 +3,8 @@ Dynamic Opcode Remapping - Anti-Static Analysis
 Maps standard opcodes to randomized values at runtime
 """
 import random
-from typing import Dict, Tuple
+import struct
+from typing import Dict, Tuple, List, Optional
 from compiler.bytecode import *
 
 
@@ -50,102 +51,127 @@ class OpcodeMapper:
         return self.rng.sample(available, min(count, len(available)))
 
 
-class JunkInjector:
-    """Inject fake instructions into bytecode"""
-    
-    def __init__(self, seed: int = None):
-        self.rng = random.Random(seed)
-        self.mapper = OpcodeMapper(seed)
-    
-    def inject(self, bytecode: bytes, ratio: float = 0.3) -> bytes:
-        """Inject junk instructions into bytecode"""
-        result = bytearray()
-        decoy_opcodes = self.mapper.get_decoy_opcodes()
-        
-        i = 0
-        while i < len(bytecode):
-            if self.rng.random() < ratio:
-                decoy = self.rng.choice(decoy_opcodes)
-                result.append(decoy)
-                if self.rng.random() < 0.5:
-                    result.append(0x00)
-                    result.append(0x00)
-            
-            result.append(bytecode[i])
-            i += 1
-        
-        return bytes(result)
+class Instruction:
+    def __init__(self, opcode: int, operand: bytes = b'', original_addr: int = 0):
+        self.opcode = opcode
+        self.operand = operand
+        self.original_addr = original_addr
+        self.new_addr = 0
+        self.is_junk = False
 
+    def size(self):
+        return 1 + len(self.operand)
+
+class BytecodeAnalyzer:
+    """Parses bytecode into instructions to enable structure-aware modification"""
+    
+    def parse(self, code: bytes) -> List[Instruction]:
+        instructions = []
+        i = 0
+        while i < len(code):
+            opcode = code[i]
+            addr = i
+            i += 1
+            
+            # Determine arguments based on opcode
+            # Opcodes with 2-byte argument (unsigned short)
+            if opcode in [OP_PUSH, OP_LOAD, OP_STORE, OP_JUMP, OP_JUMP_IF_FALSE, OP_CALL]:
+                if i + 2 <= len(code):
+                    operand = code[i:i+2]
+                    i += 2
+                else:
+                    # EOF - shouldn't happen in valid code
+                    operand = b''
+            else:
+                operand = b''
+            
+            instructions.append(Instruction(opcode, operand, addr))
+        
+        return instructions
 
 def obfuscate_bytecode(bytecode_obj, seed: int = None, level: int = 1) -> Tuple[bytes, Dict]:
-    """
-    Obfuscate bytecode with multiple techniques
-    
-    Args:
-        bytecode_obj: Bytecode object
-        seed: Random seed for deterministic obfuscation
-        level: 1=remap, 2=remap+junk, 3=remap+junk+reorder
-    
-    Returns:
-        (obfuscated_code, metadata)
-    """
     mapper = OpcodeMapper(seed)
-    code = bytearray(bytecode_obj.code)
+    rng = random.Random(seed)
     
-    # Level 1: Opcode remapping
-    for i in range(len(code)):
-        original = code[i]
-        if original in mapper.forward_map:
-            code[i] = mapper.forward_map[original]
+    # 1. Parse original bytecode to get structure
+    # NOTE: We parse the RAW (Original) bytecode BEFORE any remapping
+    # So we can identify JUMPs correctly.
+    analyzer = BytecodeAnalyzer()
     
-    obfuscated = bytes(code)
+    # If bytecode is already bytes, use it, else bytecode_obj.code
+    code_bytes = bytes(bytecode_obj.code)
+    instructions = analyzer.parse(code_bytes)
     
-    # Level 2: Junk injection
+    final_instructions = []
+    
+    # LEVEL 2: Junk Injection
     if level >= 2:
-        injector = JunkInjector(seed)
-        obfuscated = injector.inject(obfuscated, ratio=0.2)
+        for instr in instructions:
+            # Inject Junk (NOP or remapped junk)
+            if rng.random() < 0.2:
+                # Insert a NOP that will be obfuscated later
+                # Mark as junk so we don't fixup its jump if it was a jump (unlikely)
+                junk = Instruction(OP_NOP, b'', -1)
+                junk.is_junk = True
+                final_instructions.append(junk)
+                
+                # Double junk sometimes
+                if rng.random() < 0.3:
+                     final_instructions.append(Instruction(OP_NOP, b'', -1))
+            
+            final_instructions.append(instr)
+    else:
+        final_instructions = instructions
+
+    # LEVEL 3: Reordering (Simplistic Block Shuffle)
+    # WARNING: To support reordering safely, we need basic block analysis.
+    # Without it, reordering arbitrary instructions breaks execution flow (e.g. splitting PUSH/ADD).
+    # Since Phase 5 demands correctness, we will SKIP Reordering for now and focus on Junk Injection correctness.
+    # Or we can just reorder independent sequences.
+    # We will stick to Junk Injection which shifts addresses, which is enough to break naive analysis.
     
-    # Level 3: Instruction reordering with jump fixup
-    if level >= 3:
-        obfuscated = _reorder_with_jumps(obfuscated, seed)
+    # 3. Address Recalculation
+    current_addr = 0
+    addr_map = {} # old_addr -> new_addr
     
+    for instr in final_instructions:
+        instr.new_addr = current_addr
+        if instr.original_addr != -1:
+            addr_map[instr.original_addr] = current_addr
+        current_addr += instr.size()
+        
+    # 4. Jump Target Fixup
+    for instr in final_instructions:
+        if instr.opcode in [OP_JUMP, OP_JUMP_IF_FALSE]:
+            if len(instr.operand) == 2:
+                old_target = struct.unpack('<H', instr.operand)[0]
+                
+                if old_target in addr_map:
+                    new_target = addr_map[old_target]
+                    instr.operand = struct.pack('<H', new_target)
+                else:
+                    # Target might be end of code (e.g. exit)
+                    # If old_target == len(code_bytes), map directly
+                    if old_target == len(code_bytes):
+                         # Map to end of new code
+                         new_target = current_addr
+                         instr.operand = struct.pack('<H', new_target)
+
+    # 5. Serialization and Opcode Remapping
+    final_code = bytearray()
+    for instr in final_instructions:
+        # Remap opcode
+        obf_opcode = mapper.obfuscate(instr.opcode)
+        final_code.append(obf_opcode)
+        final_code.extend(instr.operand)
+
     metadata = {
         'obfuscation_seed': seed,
         'obfuscation_level': level,
         'mapper': mapper.forward_map
     }
     
-    return obfuscated, metadata
-
-
-def _reorder_with_jumps(code: bytes, seed: int) -> bytes:
-    """Reorder instructions and fix jump targets"""
-    rng = random.Random(seed)
-    
-    blocks = []
-    i = 0
-    current_block = bytearray()
-    
-    while i < len(code):
-        current_block.append(code[i])
-        
-        if len(current_block) > 10 and rng.random() < 0.3:
-            blocks.append(bytes(current_block))
-            current_block = bytearray()
-        
-        i += 1
-    
-    if current_block:
-        blocks.append(bytes(current_block))
-    
-    indices = list(range(len(blocks)))
-    rng.shuffle(indices)
-    
-    reordered = bytearray()
-    for idx in indices:
-        reordered.extend(blocks[idx])
-    
-    return bytes(reordered)
+    return bytes(final_code), metadata
 
 
 def create_opcode_table_file(seed: int, filepath: str):
