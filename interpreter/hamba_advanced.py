@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+[LEGACY] Dipertahankan hanya karena compiler bytecode v3 (compiler/bytecode.py,
+obfuscator, Hell Mode) memakai Parser & AST di file ini. Untuk menjalankan
+program gunakan ``hambalang run`` (core terpadu di paket ``hambalang``).
+
 HambaLang Interpreter v3 - Advanced Edition
 Esoteric-but-serious satire language with scoped blocks, procedures,
 controlled loops, satirical exceptions, deterministic runtime (CTF mode),

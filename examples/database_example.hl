@@ -17,6 +17,7 @@ sambungDB("proyek_db", "sqlite", "proyek_hambalang.db")
 
 lapor "\n[2] Membuat tabel proyek..."
 
+queryDB("proyek_db", "DROP TABLE IF EXISTS proyek")
 create_table = "CREATE TABLE IF NOT EXISTS proyek (id INTEGER PRIMARY KEY, nama TEXT, lokasi TEXT, anggaran INTEGER, status TEXT)"
 
 hasil = queryDB("proyek_db", create_table)
@@ -94,8 +95,8 @@ total = queryDB("proyek_db", count_query)
 sum_query = "SELECT SUM(anggaran) as total_anggaran FROM proyek"
 total_budget = queryDB("proyek_db", sum_query)
 
-lapor "Total proyek: " + teks(total)
-lapor "Total anggaran: " + teks(total_budget)
+lapor "Total proyek: " + teks(total[0]["total"])
+lapor "Total anggaran: " + rupiah(total_budget[0]["total_anggaran"])
 
 // ==========================================
 // 8. DELETE DATA

@@ -1,6 +1,4 @@
-"""
-Initialize CLI package
-"""
-from cli.hambalang import main
+"""Shim kompatibilitas untuk CLI lama; implementasi ada di hambalang.cli."""
+from hambalang.cli import main
 
-__all__ = ['main']
+__all__ = ["main"]
