@@ -526,9 +526,7 @@ def _korupsi(rt, persen):
 def _mangkrak(rt, x=None):
     """Mangkrak(ms): proyek tertunda. Mangkrak("alasan"): lempar ProyekMangkrak."""
     if x is None or not is_number(x):
-        alasan = "Proyek mangkrak" if x is None else to_str(x)
-        rt.write(f"⏳ PROYEK MANGKRAK: {alasan}")
-        raise ProyekMangkrak(alasan)
+        raise ProyekMangkrak("Proyek mangkrak" if x is None else to_str(x))
     seconds = max(0, x) / 1000
     rt.write(f"⏳ Proyek mangkrak selama {format_number(seconds)} detik...")
     rt.sleep(seconds)

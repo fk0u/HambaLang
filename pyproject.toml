@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hambalang"
+version = "6.0.0"
+description = "Bahasa pemrograman satir birokrasi: interpreter, bytecode compiler, dan VM"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "HambaLang contributors" }]
+keywords = ["esolang", "interpreter", "bytecode", "vm", "satire", "indonesia"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Interpreters",
+    "Natural Language :: Indonesian",
+]
+dependencies = []
+
+[project.optional-dependencies]
+http = ["requests>=2.31"]
+db = ["mysql-connector-python>=8.2", "psycopg2-binary>=2.9.9"]
+dev = ["pytest>=7", "ruff>=0.4"]
+
+[project.scripts]
+hambalang = "hambalang.cli:main"
+
+[tool.setuptools]
+packages = ["hambalang"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["compiler", "vm", "obfuscator", "ctf", "interpreter/hamba_advanced.py", "web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B"]
+ignore = ["B904", "B905"]

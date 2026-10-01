@@ -1,82 +1,188 @@
-# 🏛️ HambaLang v5.0 - The Academic Era
+# 🏛️ HambaLang v6 — The Unification Era
 
 ![HambaLang Logo](1768230504202.png)
 
-![Status](https://img.shields.io/badge/status-legally__verified-blue)
-![Semantics](https://img.shields.io/badge/semantics-formal-red)
-![Obfuscation](https://img.shields.io/badge/protection-hell__mode-black)
+![Version](https://img.shields.io/badge/version-6.0.0-blue)
+![Engines](https://img.shields.io/badge/engines-interpreter%20%2B%20bytecode%20VM-red)
+![Tests](https://img.shields.io/badge/tests-differential-green)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-> "Bahasa pemrograman satir pertama yang memiliki spesifikasi formal, VM deterministik, dan paper akademik."
+> "Bahasa pemrograman satir pertama yang anggarannya bisa dikorupsi secara deterministik."
 
-HambaLang bukan lagi sekadar lelucon. Ini adalah **studi kasus komputasi birokrasi** yang diimplementasikan dengan rigor matematis.
+HambaLang adalah bahasa pemrograman satir tentang proyek mangkrak dan birokrasi.
+Satirnya serius: ada lexer, parser, tree-walking interpreter, compiler ke
+bytecode, stack VM, debugger, REPL, dan playground web — semuanya berbagi
+**satu core** dan diuji agar interpreter dan VM menghasilkan output yang
+identik untuk setiap program.
 
----
+```hl
+fungsi fib(n)
+    jika n < 2
+        kembalikan n
+    akhir
+    kembalikan fib(n - 1) + fib(n - 2)
+akhir
 
-## 📚 Formal Documentation (Phase 5)
+lapor "Fibonacci: " + petakan(rentang(10), fib)
 
-Kami telah melegitimasi HambaLang sebagai entitas akademik yang serius.
+coba
+    Korupsi(30)
+    jika anggaran < 800000000
+        Mangkrak "Dana tidak cukup untuk groundbreaking"
+    akhir
+jikaGagal alasan
+    lapor "⚠️ " + alasan
+akhirCoba
 
-### 📜 Specifications
-- **[Language Specification](docs/HambaLang_Spec.md)**: Definisi formal filosofi, memory model, dan type system.
-- **[Formal Grammar (EBNF)](docs/Grammar.ebnf)**: Notasi bebas konteks untuk parser generator.
-- **[Operational Semantics](docs/Semantics.md)**: Definisi matematis (Small-step SOS) untuk transisi state `Korupsi`, `Anggaran`, dll.
-- **[VM Specification](docs/VM_Spec.md)**: Arsitektur stack machine, opcode table, dan format binary `.hbc`.
-
-### 🎓 Academic Paper
-- **[HambaLang: A Satirical Bytecode-Compiled Language](paper/HambaLang.md)**: Paper gaya Sigbovik untuk publikasi jurnal.
-
----
-
-## 🏗️ Architecture Evolution
-
-1.  **Phase 1**: Interpreter Sederhana (Meme)
-2.  **Phase 2**: AST & Structured Programming
-3.  **Phase 3**: Bytecode Compiler & Virtual Machine
-4.  **Phase 4**: Obfuscation & Security (Hell Mode)
-5.  **Phase 5**: **Formal Verification & Academic Theory** (Current)
-
----
-
-## 🔒 Security & Verification
-
-HambaLang v5.0 menjamin:
-- **Determinism**: Eksekusi program identik untuk seed yang sama.
-- **Bounded Execution**: Loop infinite dicegah melalui mekanisme `Anggaran/Budget`.
-- **Anti-Analysis**: Obfuscated VM mencegah reverse engineering casual.
-
----
-
-## 🚀 Quick Start (Academic Mode)
-
-### Mempelajari Semantik
-```bash
-# Lihat definisi formal statement 'Korupsi'
-cat docs/Semantics.md
-```
-
-### Membaca Spesifikasi VM
-```bash
-# Pelajari arsitektur stack machine
-cat docs/VM_Spec.md
-```
-
-### Menjalankan dalam Mode Strict
-```bash
-python cli/hambalang.py run examples/simple_test.hbc --strict --audit
+selesai()
 ```
 
 ---
 
-## 🔧 Installation
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/your-repo/HambaLang.git
+git clone https://github.com/fk0u/HambaLang.git
 cd HambaLang
-pip install -r requirements.txt
-python cli/hambalang.py --help
+pip install -e .            # core tanpa dependency; tambah [http] / [db] bila perlu
+
+hambalang run examples/algorithms.hl          # interpreter
+hambalang run examples/algorithms.hl --vm     # compile ke bytecode, jalan di HambaVM v4
+hambalang repl                                # mode interaktif
+```
+
+Tanpa install: `python -m hambalang run file.hl` (atau perintah lama
+`python cli/hambalang.py ...` / `python interpreter/hamba_v2.py file.hl` — masih jalan).
+
+### Perintah CLI
+
+| Perintah | Fungsi |
+|----------|--------|
+| `hambalang run FILE.hl [--vm] [--seed N] [--audit] [--fast]` | Jalankan source (interpreter atau VM) |
+| `hambalang run FILE.hbc` | Jalankan bytecode (v4, atau legacy v3 otomatis terdeteksi) |
+| `hambalang compile FILE.hl [-o OUT]` | Kompilasi ke bytecode HBC v4 |
+| `hambalang disasm FILE.hbc` | Disassemble bytecode (v3/v4) |
+| `hambalang debug FILE.hl [-b BARIS]` | Debugger: step, breakpoint, inspeksi variabel, evaluasi ekspresi |
+| `hambalang check FILE...` | Verifikasi sintaks tanpa menjalankan (cocok untuk CI) |
+| `hambalang repl` | REPL dengan blok multi-baris |
+| `hambalang ctf FILE.hl` | Main challenge CTF (sandbox) |
+| `hambalang obfuscate / analyze` | Toolchain legacy v3 (Phase 4, Hell Mode) |
+
+Opsi runtime penting:
+
+- `--seed N` — RNG deterministik (korupsi, event mangkrak, `acak()`).
+- `--step-limit N` — batas langkah; habis = `NegaraBangkrut` (tidak bisa ditangkap `coba`).
+- `--sandbox` / `--strict` — blokir file, database, dan HTTP.
+- `--fast` — lewati jeda `Mangkrak(ms)`.
+
+Error dilaporkan lengkap dengan posisi dan cuplikan source:
+
+```
+OperasiIlegal di laporan.hl:12
+  Pembagian dengan nol (kayak bagi anggaran di akhir tahun)
+   12 |     rata = total / jumlah_proyek
 ```
 
 ---
 
-*Verified by the Ministry of Digital Bureaucracy.*
-*No. SK: 2026/HAMBALANG/ACADEMIC/V5*
+## 📖 Bahasa dalam 2 Menit
+
+Lengkapnya di **[SYNTAX.md](SYNTAX.md)**; grammar formal di **[docs/Grammar.ebnf](docs/Grammar.ebnf)**.
+
+| Konsep | Sintaks |
+|--------|---------|
+| Output | `lapor x` · `print x` |
+| Variabel | `x = 1` · `set x = 1` · `Anggaran x = 1` · `x += 5` |
+| Tipe | angka `42 3.14 1_000_000`, teks `"a\n"`, `benar/salah`, `kosong`, daftar `[1, 2]`, objek `{nama: "x"}` |
+| Akses | `daftar[0]`, `daftar[-1]`, `obj["k"]`, `obj.k` |
+| Operator | `+ - * / % **`, `== != < > <= >=`, `dan atau bukan` (short-circuit) |
+| Kondisi | `jika .. ataujika .. atau .. akhir` · `jika c maka lapor "x"` |
+| Loop | `selama c .. akhir` · `untuk i dari 1 sampai 10 langkah 2` · `untuk x dalam daftar` · `Rapat(3) .. selesaiRapat` |
+| Fungsi | `fungsi f(a, b) .. kembalikan .. akhir` (closure, rekursi, first-class) |
+| Prosedur | `prosedur P() .. akhirProsedur` (bisa menulis variabel luar) |
+| Scope | `mulai .. akhir` · `global x` |
+| Error | `coba .. jikaGagal e .. akhirCoba` · `Mangkrak "alasan"` |
+| Input | `Tagih x` · `Tagih x, "Prompt: "` |
+| Satire | `Korupsi(persen)` · `Mangkrak(ms)` · `selesai()` · `RapatInfinite()` · `Audit()` |
+
+**Satu parser, semua dialek.** Program lama tetap valid: dialek v2
+(`jika/akhir`), advanced v3 (`set`, `coba`, `Rapat(n)`), dan dialek formal v5
+(`Rapat … Bubarkan`, `Sita {} Pengadilan {}`, `Proyek {}`, `BagiRata`, `Janji`,
+`Wacana`) bisa dicampur dalam satu file.
+
+**State negara.** `anggaran` (awal Rp 1 M), `progress`, `status_proyek`, dan
+`total_korupsi` (read-only) selalu global.
+
+---
+
+## 🏗️ Arsitektur
+
+```
+source .hl ──► lexer ──► parser ──► AST ─┬──► interpreter (tree-walking) ──┐
+                                         │                                 ├──► runtime bersama
+                                         └──► compiler ──► HBC v4 ──► VM ──┘    (nilai, operator,
+                                                              │                  scope, stdlib)
+                                                              └──► .hbc file / disasm / debugger
+```
+
+| Modul | Isi |
+|-------|-----|
+| `hambalang/lexer.py` | Token + posisi baris/kolom, escape string, komentar `//` `#` `/* */` |
+| `hambalang/parser.py` | Recursive descent + precedence climbing, semua dialek → satu AST |
+| `hambalang/interpreter.py` | Engine referensi |
+| `hambalang/compiler.py`, `bytecode.py`, `vm.py` | Compiler HBC v4, format file, disassembler, HambaVM v4 |
+| `hambalang/runtime.py` | Nilai, operator, scope, state negara — dipakai kedua engine |
+| `hambalang/builtins.py` | Standard library (60+ fungsi) |
+| `hambalang/cli.py` | CLI, REPL, debugger |
+| `web/` | Playground SvelteKit + Pyodide yang memuat core yang sama |
+| `compiler/`, `vm/`, `obfuscator/`, `ctf/hell_mode.py` | Toolchain legacy v3 (Phase 3–4) |
+
+Spesifikasi: [Language Spec](docs/HambaLang_Spec.md) · [VM Spec](docs/VM_Spec.md) ·
+[Operational Semantics](docs/Semantics.md) · [Paper](paper/HambaLang.md)
+
+---
+
+## 🧪 Testing
+
+```bash
+pip install -e ".[dev]"
+pytest            # 240+ test
+ruff check hambalang tests
+```
+
+Setiap test semantik dijalankan dua kali — di interpreter dan di HambaVM v4.
+Semua program di `examples/` dan `ctf/` diuji dengan *differential testing*:
+outputnya harus identik byte-per-byte di kedua engine, dan bytecode-nya harus
+lolos round-trip serialisasi.
+
+---
+
+## 🏴 CTF Pack
+
+```bash
+hambalang ctf ctf/challenge_easy.hl
+```
+
+Tiga challenge di [`ctf/`](ctf/README.md) memakai dialek formal v5.
+Jalan di sandbox: akses file/DB/HTTP dimatikan.
+
+## 🌐 Playground
+
+```bash
+cd web && npm install && npm run dev
+```
+
+Build menyalin `hambalang/` ke `static/` lalu Pyodide menjalankannya di
+browser — interpreter dan VM yang sama dengan CLI, mode sandbox.
+
+## 🐳 Docker
+
+```bash
+docker build -t hambalang .
+docker run --rm hambalang                                  # demo
+docker run --rm -v "$PWD:/src" hambalang run /src/x.hl
+```
+
+---
+
+*Diverifikasi oleh Kementerian Birokrasi Digital. No. SK: 2026/HAMBALANG/V6/TERPADU*

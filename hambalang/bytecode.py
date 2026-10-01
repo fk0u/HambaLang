@@ -89,6 +89,8 @@ def _r_str(f: BinaryIO) -> str:
 
 
 def _w_code(f: BinaryIO, co: CodeObject):
+    if len(co.consts) > 0xFFFF or len(co.params) > 0xFFFF:
+        raise BytecodeError(f"'{co.name}' punya terlalu banyak konstanta untuk format HBC v4")
     _w_str(f, co.name)
     _w_str(f, co.kind)
     f.write(struct.pack("<H", len(co.params)))

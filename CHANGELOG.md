@@ -2,6 +2,59 @@
 
 All notable changes to HambaLang will be documented in this file.
 
+## [6.0.0] - 2026-10-01 — The Unification Era
+
+### Ringkasan audit (alasan rilis ini)
+- Ada 5 implementasi terpisah (`hamba.py`, `hamba_v2.py`, `hamba_advanced.py`,
+  compiler/VM v3, interpreter inline di web) dengan 4 dialek yang tidak kompatibel.
+- Grammar resmi di `docs/Grammar.ebnf` (dialek `Rapat … Bubarkan`) tidak punya
+  implementasi sama sekali, sehingga 3 challenge CTF tidak bisa dimainkan.
+- Evaluator berbasis `str.split`: `10 - 2 - 3` menghasilkan `11`, `f(1) + g(2)`
+  hanya mengembalikan `f(1)`, escape `\n` tidak diproses, string berisi operator rusak.
+- 14 dari 17 contoh gagal dijalankan; test suite 6/7; build web gagal
+  (`src/app.html` tidak ada, `npm ci` tanpa lockfile).
+
+### Added
+- Paket `hambalang/`: lexer, parser (semua dialek → satu AST), tree-walking
+  interpreter, compiler bytecode HBC v4, HambaVM v4, runtime & stdlib bersama.
+- Fitur bahasa: closure, fungsi first-class, `global`, compound assignment
+  (`+=` dst), operator `**`, akses `obj.properti`, index negatif,
+  `untuk … langkah`, `atau jika`, `coba … jikaGagal e`, komentar `#` dan `/* */`,
+  `;` sebagai pemisah statement, string multi-baris & escape.
+- Dialek formal v5 kini benar-benar jalan: `Rapat/Bubarkan`, `Anggaran`,
+  `Sita/Pengadilan`, `Proyek`, `Tagih`, `BagiRata`, `Janji`, `Wacana`.
+- Stdlib 60+ fungsi: higher-order (`petakan`, `saring`, `lipat`), teks, objek,
+  JSON, `rupiah()`, `pastikan()`, `Audit()`, `queryDB` dengan parameter binding.
+- CLI terpadu: `run`, `compile`, `disasm`, `debug` (breakpoint, step,
+  evaluasi ekspresi), `check`, `repl`, `ctf`; laporan error dengan cuplikan
+  source dan caret; `--seed`, `--step-limit`, `--sandbox`, `--audit`, `--fast`.
+- `pyproject.toml` dengan entry point `hambalang`; extras `[http]`, `[db]`, `[dev]`.
+- Test suite pytest (240+ test): setiap test semantik jalan di interpreter dan
+  VM; differential testing semua contoh & CTF; round-trip bytecode; CLI E2E.
+- Spesifikasi baru yang sesuai implementasi: `docs/Grammar.ebnf`,
+  `docs/HambaLang_Spec.md`, `docs/VM_Spec.md`, `SYNTAX.md`.
+
+### Changed
+- `interpreter/hamba_v2.py`, `interpreter/hamba.py`, `cli/hambalang.py` menjadi
+  shim ke core baru (perintah lama tetap jalan).
+- `queryDB` SELECT mengembalikan daftar objek (`rows[0].nama`), bukan tuple.
+- `tipe()` mengembalikan nama tipe HambaLang (`angka`, `teks`, `daftar`, …).
+- `Korupsi`, `Mangkrak`, `acak` memakai satu RNG ber-seed per run (deterministik).
+- Playground web memuat core Python yang sama via Pyodide (CDN), dengan pilihan
+  engine Interpreter/VM, seed, dan mode sandbox.
+- Contoh database dibuat idempoten dan memakai hasil query sungguhan.
+- Dokumen historis Phase 3–5 dipindah ke `docs/history/`.
+
+### Security
+- Mode sandbox memblokir file/DB/HTTP (aktif di CTF dan playground).
+- `queryDB(db, sql, params)` mendukung placeholder untuk mencegah SQL injection.
+- Batas langkah tidak bisa ditangkap `coba`; rekursi dibatasi 200 lapis.
+
+### Compatibility
+- Toolchain legacy v3 (compiler lama, obfuscator, ObfuscatedVM, Hell Mode)
+  tetap didukung: `hambalang compile --legacy`, `run file.hbc --obfuscated`,
+  `obfuscate`, `analyze`. Bytecode v3/v4 dideteksi otomatis dari header.
+
 ## [2.0.0] - 2026-01-12
 
 ### Added - Complete Programming Language Features

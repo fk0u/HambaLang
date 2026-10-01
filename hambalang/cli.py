@@ -25,6 +25,17 @@ from hambalang.runtime import Runtime, repr_value
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def require_legacy() -> bool:
+    """Toolchain v3 (compiler/, vm/, obfuscator/) hanya ada di source checkout."""
+    for root in (PROJECT_ROOT, os.getcwd()):
+        if os.path.isdir(os.path.join(root, "compiler")) and os.path.isdir(os.path.join(root, "vm")):
+            if root not in sys.path:
+                sys.path.insert(0, root)
+            return True
+    error("Toolchain legacy v3 tidak ditemukan. Jalankan dari source checkout HambaLang.")
+    return False
+
+
 # ===================================================================== output
 
 class Style:
@@ -183,7 +194,8 @@ def run_bytecode(args) -> int:
 
 def run_legacy_bytecode(args) -> int:
     """Bytecode v3 (Phase 3/4) dijalankan HambaVM lama / ObfuscatedVM."""
-    sys.path.insert(0, PROJECT_ROOT)
+    if not require_legacy():
+        return 1
     info("Bytecode legacy v3 terdeteksi, memakai HambaVM lama")
     if args.obfuscated or args.paranoia or args.hell:
         from compiler.bytecode import Bytecode
@@ -226,7 +238,8 @@ def cmd_compile(args) -> int:
 
 
 def compile_legacy(path: str, out: str) -> int:
-    sys.path.insert(0, PROJECT_ROOT)
+    if not require_legacy():
+        return 1
     from compiler.bytecode import BytecodeCompiler
     from interpreter.hamba_advanced import Parser
     source = read_source(path)
@@ -258,7 +271,8 @@ def cmd_disasm(args) -> int:
             error(f"Bytecode rusak: {e}")
             return 1
         return 0
-    sys.path.insert(0, PROJECT_ROOT)
+    if not require_legacy():
+        return 1
     from compiler.bytecode import Bytecode, disassemble
     print(disassemble(Bytecode.load(path)))
     return 0
@@ -530,7 +544,8 @@ def cmd_debug(args) -> int:
 # ===================================================================== legacy
 
 def cmd_legacy(args) -> int:
-    sys.path.insert(0, PROJECT_ROOT)
+    if not require_legacy():
+        return 1
     from cli.cli_extensions import cmd_analyze, cmd_obfuscate
     return (cmd_obfuscate if args.command == "obfuscate" else cmd_analyze)(args)
 

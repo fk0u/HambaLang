@@ -1,96 +1,170 @@
-# Hamba Virtual Machine (HambaVM) Specification
+# HambaVM v4 — Spesifikasi Bytecode & Mesin Virtual
 
-## 1. Overview
-The HambaVM is a deterministic, stack-based virtual machine designed to execute Hamba Bytecode (`.hbc`). It features a separated operand stack and call stack, with built-in protections against reverse engineering (in Phase 4+).
+Implementasi: `hambalang/bytecode.py` (format, disassembler),
+`hambalang/compiler.py` (AST → bytecode), `hambalang/vm.py` (eksekusi).
 
-**Architecture**: Stack Machine
-**Word Size**: 64-bit
-**Endianness**: Little-endian
-**File Magic**: `\xDE\xAD\xBE\xEF` (standard) or `\xCA\xFE\xBA\xBE` (obfuscated)
+## 1. Model eksekusi
 
-## 2. Bytecode Format
+HambaVM adalah stack machine dengan **frame per pemanggilan fungsi**. Setiap
+`Frame` memiliki:
 
-A `.hbc` file consists of:
+| Field | Isi |
+|-------|-----|
+| `code` | `CodeObject` yang sedang dieksekusi |
+| `pc` | index instruksi berikutnya |
+| `env` | environment variabel (rantai scope, sama dengan interpreter) |
+| `stack` | operand stack frame ini |
+| `handlers` | stack handler `coba`: `(alamat, kedalaman stack, env)` |
+| `line` | baris source terakhir (`LINE`), dipakai untuk pesan error |
 
-| Component | Size (Bytes) | Description |
-|-----------|--------------|-------------|
-| **Header** | 4 | Magic Number |
-| **Version** | 4 | VM Version (e.g., 4.0) |
-| **Timestamp**| 8 | Compilation Time |
-| **Flags** | 4 | Bitmask (0x1: Obfuscated, 0x2: HellMode) |
-| **Const Pool** | Variable | Serialized list of constants |
-| **Code** | Variable | Sequence of instructions |
+Variabel diakses **berdasarkan nama** melalui environment, sehingga semantik
+scope (fungsi vs blok, closure, `global`) identik dengan tree-walking
+interpreter. Nilai, operator, dan builtin dipanggil dari `hambalang/runtime.py`
+dan `hambalang/builtins.py` yang juga dipakai interpreter.
 
-## 3. Instruction Set Architecture (ISA)
+### Kesetaraan dengan interpreter
 
-The current HambaVM implements ~30 opcodes. Opcodes are 1 byte. Arguments are variable length (typically 2-4 bytes).
+Compiler menyisipkan `LINE n` di awal setiap statement (dan di back-edge loop
+`selama`). `LINE` menaikkan penghitung langkah persis seperti interpreter
+menghitung statement, jadi `Audit().langkah`, batas `--step-limit`, dan nomor
+baris error sama di kedua engine. Test suite memverifikasi ini dengan
+menjalankan setiap program di keduanya dan membandingkan output.
 
-### 3.1 Stack Manipulation
-| Opcode | Mnemonic | Arg | Description |
-|--------|----------|-----|-------------|
-| 0x01 | `LOAD_CONST` | index | Pushes `ConstPool[index]` to stack. |
-| 0x02 | `LOAD_VAR` | name_id | Pushes value of variable `name` to stack. |
-| 0x03 | `STORE_VAR` | name_id | Pops value and stores in variable `name`. |
-| 0x04 | `POP` | - | Discards top of stack. |
+## 2. Format file `.hbc`
 
-### 3.2 Arithmetic & Logic
-| Opcode | Mnemonic | Arg | Description |
-|--------|----------|-----|-------------|
-| 0x10 | `ADD` | - | `b = pop, a = pop, push(a + b)` |
-| 0x11 | `SUB` | - | `b = pop, a = pop, push(a - b)` |
-| 0x12 | `MUL` | - | `b = pop, a = pop, push(a * b)` |
-| 0x13 | `DIV` | - | `b = pop, a = pop, push(a / b)` |
-| 0x14 | `MOD` | - | `b = pop, a = pop, push(a % b)` |
-| 0x15 | `EQ` | - | `push(a == b)` |
-| 0x16 | `NEQ` | - | `push(a != b)` |
-| 0x17 | `GT` | - | `push(a > b)` |
-| 0x18 | `LT` | - | `push(a < b)` |
+Semua integer little-endian.
 
-### 3.3 Control Flow
-| Opcode | Mnemonic | Arg | Description |
-|--------|----------|-----|-------------|
-| 0x30 | `JUMP` | offset | Relative jump by `offset`. |
-| 0x31 | `JUMP_IF_FALSE` | offset | Pop `cond`. If false, jump by `offset`. True falls through. |
-| 0x32 | `CALL` | name_id | Call procedure `name`. Pushes return address. |
-| 0x33 | `RETURN` | - | Pop current stack frame, return to caller. |
-| 0x3F | `EXIT` | - | Stop execution. |
+```
+magic    4 byte   "HBC\0"
+version  u16      4
+code     CodeObject (modul)
 
-### 3.4 I/O & System
-| Opcode | Mnemonic | Arg | Description |
-|--------|----------|-----|-------------|
-| 0x40 | `PRINT` | - | Pop and print to stdout (`Korupsi`). |
-| 0x41 | `INPUT` | - | Read stdin to stack (`Tagih`). |
-| 0x50 | `DEBUG` | - | Dump stack state (Disabled in Hell Mode). |
+CodeObject:
+  name    str
+  kind    str                 "modul" | "fungsi" | "prosedur"
+  params  u16 n, str × n
+  code    u32 n, (u8 opcode, u32 arg) × n
+  lines   u32 × n             baris source per instruksi
+  consts  u16 n, const × n
 
-### 3.5 Obfuscation Specials (Phase 4)
-| Opcode | Mnemonic | Arg | Description |
-|--------|----------|-----|-------------|
-| 0x90 | `OBF_NOP` | - | No operation (NOP Sled). |
-| 0x91 | `OBF_SWAP` | - | Swap top 2 stack items (Polymorphic junk). |
-| 0x92 | `OBF_JUNK` | - | Non-functional math op (Entropy generation). |
-| 0xFE | `HELL_CHECK` | - | Validate CTF flag stage. |
+const := tag u8 + payload
+  'N' kosong   'T' benar   'F' salah
+  'I' i64      'B' bigint (str desimal)   'D' f64
+  'S' str      'C' CodeObject (fungsi bersarang)
 
-## 4. Stack Frame Structure
-
-```text
-+------------------+
-| Return Address   |
-+------------------+
-| Local Variables  | Map<String, Value>
-+------------------+
-| Operand Stack    | List<Value>
-+------------------+
+str := u32 panjang + byte UTF-8
 ```
 
-## 5. Security Invariants (Phase 5)
+Header kompatibel dengan bytecode legacy v3 (magic sama, versi `u16` di offset
+4), sehingga `hambalang run/disasm` otomatis memilih HambaVM v4 atau VM legacy.
 
-1.  **Stack Balance**: A basic block must result in a net stack change of 0 unless it consumes/produces values for the next block. (Verified by formal analysis in strict mode).
-2.  **Budget Monotonicity**: The remaining budget $B$ must strictly decrease with every instruction executed.
-3.  **Address Bounds**: All `JUMP` targets must strictly fall within the bytecode segment $[0, \text{len}(code))$.
+Konstanta di-deduplikasi berdasarkan `(tipe, nilai)` — `1`, `1.0`, dan `benar`
+tetap konstanta terpisah.
 
-## 6. Error Handling
+## 3. Instruction set
 
-When the VM traps (e.g., Stack Underflow):
-1.  Execution is halted.
-2.  IP (Instruction Pointer) is logged.
-3.  "Mangkrak" state is returned.
+| # | Opcode | Arg | Efek pada stack / state |
+|---|--------|-----|-------------------------|
+| 0 | `NOP` | – | – |
+| 1 | `LOAD_CONST` | k | push `consts[k]` |
+| 2 | `LOAD_NAME` | k | push nilai variabel `consts[k]` (state negara → env → builtin) |
+| 3 | `STORE_NAME` | k | pop → assign ke `consts[k]` (aturan scope §4) |
+| 4 | `POP` | – | buang top |
+| 5 | `DUP` | – | duplikasi top |
+| 6 | `DUP2` | – | duplikasi dua teratas (untuk `a[i] += x`) |
+| 7 | `BINARY` | op | `b = pop; a = pop; push a op b`; op index ke `+ - * / % ** == != < > <= >=` |
+| 8 | `UNARY` | op | top = op(top); op index ke `- bukan` |
+| 9 | `INDEX_GET` | – | `k = pop; o = pop; push o[k]` |
+| 10 | `INDEX_SET` | – | `v = pop; k = pop; o = pop; o[k] = v` |
+| 11 | `ATTR_GET` | k | top = top.`consts[k]` |
+| 12 | `ATTR_SET` | k | `v = pop; o = pop; o.consts[k] = v` |
+| 13 | `BUILD_LIST` | n | pop n item → push daftar |
+| 14 | `BUILD_DICT` | n | pop n pasangan kunci/nilai → push objek |
+| 15 | `CALL` | n | pop n argumen + fungsi; builtin dipanggil langsung, fungsi user mendorong frame baru |
+| 16 | `RETURN` | – | pop nilai, buang frame, push nilai ke frame pemanggil |
+| 17 | `PRINT` | – | pop → tulis ke output |
+| 18 | `JUMP` | a | `pc = a` |
+| 19 | `JUMP_IF_FALSE` | a | pop; jika falsy `pc = a` |
+| 20 | `JUMP_IF_FALSE_OR_POP` | a | `dan`: jika top falsy lompat (top tetap), selain itu pop |
+| 21 | `JUMP_IF_TRUE_OR_POP` | a | `atau`: jika top truthy lompat (top tetap), selain itu pop |
+| 22 | `MAKE_FUNCTION` | k | push closure dari `consts[k]` + env saat ini |
+| 23 | `PUSH_SCOPE` | – | `env = Env(env)` (`mulai`) |
+| 24 | `POP_SCOPE` | – | `env = env.parent` |
+| 25 | `SETUP_TRY` | a | daftarkan handler di alamat `a` |
+| 26 | `POP_TRY` | – | lepas handler teratas |
+| 27 | `RAISE` | – | pop pesan → lempar `ProyekMangkrak` |
+| 28 | `GET_ITER` | – | top = iterator (daftar/teks/kunci objek, disalin) |
+| 29 | `RANGE_ITER` | – | pop langkah, akhir, awal → push iterator inklusif |
+| 30 | `REPEAT_ITER` | – | top = iterator `range(n)` untuk `Rapat(n)` |
+| 31 | `FOR_ITER` | a | push `next(top)`; jika habis pop iterator dan `pc = a` |
+| 32 | `INPUT` | p | (p=1: pop prompt) → push input (teks angka jadi angka) |
+| 33 | `GLOBAL` | k | deklarasikan `consts[k]` global di scope fungsi |
+| 34 | `HALT` | – | jalankan `selesai()` dan hentikan program |
+| 35 | `LINE` | n | catat baris, tick langkah (`NegaraBangkrut` bila melebihi batas) |
+
+## 4. Aturan scope (`STORE_NAME`)
+
+1. Nama state negara (`anggaran`, `progress`, `status_proyek`, `total_korupsi`) → state global.
+2. Cari nama dari env sekarang ke atas; berhenti setelah memeriksa env fungsi terdekat.
+3. Ketemu → update di env tersebut. Nama dideklarasikan `global` → tulis ke env global.
+4. Tidak ketemu → buat di env sekarang.
+
+Env fungsi dibuat dengan `is_function = (kind == "fungsi")`; `prosedur` memakai
+env blok sehingga assignment menembus ke luar.
+
+## 5. Kompilasi kontrol alur
+
+```
+selama c:                 untuk x dalam e / dari..sampai / Rapat(n):
+  top:  <c>                    <iterator>
+        JUMP_IF_FALSE end   top: FOR_ITER end
+        <body>                   STORE_NAME x      (Rapat: POP)
+  cont: LINE                     <body>
+        JUMP top                 JUMP top
+  end:                      brk: POP               (hanya bila ada 'hentikan')
+                            end:
+```
+
+`hentikan`/`lanjut` di dalam `coba` atau `mulai` lebih dulu memancarkan
+`POP_TRY`/`POP_SCOPE` sebanyak blok yang ditinggalkan.
+
+```
+coba:   SETUP_TRY handler
+        <body>
+        POP_TRY
+        JUMP end
+handler:STORE_NAME e   (atau POP)
+        <handler body>
+end:
+```
+
+## 6. Exception
+
+Saat instruksi melempar `HambaError`, VM mengisi nomor baris dari frame aktif
+lalu mencari handler dari frame teratas ke bawah. Handler ditemukan → stack
+frame dipotong ke kedalaman saat `SETUP_TRY`, env dipulihkan, pesan error
+di-push, `pc` lompat ke handler. Frame tanpa handler dibuang (call depth
+dikurangi). `NegaraBangkrut` dan `selesai()` tidak bisa ditangkap.
+
+Builtin higher-order (`petakan`, `saring`, `lipat`) memanggil fungsi user
+lewat `VM.call_function`, yang menjalankan loop VM bersarang sampai frame
+tersebut return; exception yang tidak tertangkap di dalamnya diteruskan ke
+frame pemanggil seperti biasa.
+
+## 7. Batas
+
+| Batas | Default | Error |
+|-------|---------|-------|
+| Langkah eksekusi | 1.000.000 (`--step-limit`, 0 = tanpa batas) | `NegaraBangkrut` |
+| Kedalaman pemanggilan | 200 frame | `OperasiIlegal` |
+| Konstanta per CodeObject | 65.535 | – |
+
+---
+
+## Lampiran: Bytecode legacy v3
+
+Toolchain Phase 3–4 (`compiler/bytecode.py`, `vm/hamba_vm.py`,
+`vm/obfuscated_vm.py`, `obfuscator/`) tetap tersedia untuk obfuscation dan
+Hell Mode CTF. Format v3 memakai operand 16-bit, variabel bernomor, dan hanya
+mendukung subset dialek advanced (`set`, `lapor`, `Korupsi`, `jika` tanpa
+`atau`, `Rapat(n)`). Gunakan `hambalang compile --legacy` untuk menghasilkannya.

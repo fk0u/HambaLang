@@ -35,3 +35,10 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Core Python yang disalin untuk playground (scripts/sync-core.mjs)
+web/static/hambalang/
+
+# Artefak contoh
+*.db
+*.egg-info/
