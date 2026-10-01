@@ -515,3 +515,26 @@ lapor akar(16)
 def test_audit_reports_steps(run):
     out = run("x = 1\ny = 2\nlapor Audit().langkah")
     assert out == "3"
+
+
+@pytest.mark.parametrize("src", [
+    'x = "a" * 100000000',
+    "x = [0] * 100000000",
+    "x = 2 ** 100000000",
+    'x = ulangi("ab", 100000000)',
+    "x = 10 ** 400 / 3",
+    "x = 10 ** 400 * 1.5",
+    "x = rentang(100000000)",
+])
+def test_resource_guards(run, src):
+    with pytest.raises(OperasiIlegal, match="terlalu besar"):
+        run(src)
+
+
+def test_big_integers_still_work(run):
+    assert run("lapor 2 ** 200 % 1000") == "376"
+
+
+def test_repeated_squaring_is_bounded(run):
+    with pytest.raises(OperasiIlegal, match="terlalu besar"):
+        run("x = 3\nRapat(40)\n  x = x * x\nselesaiRapat")

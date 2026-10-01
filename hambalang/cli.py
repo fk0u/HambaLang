@@ -492,18 +492,28 @@ class Debugger:
                 print("Perintah tidak dikenal. Ketik 'bantuan'.")
 
     def evaluate(self, vm, frame, expr_src: str):
-        from hambalang.interpreter import Interpreter
+        """Kompilasi ekspresi lalu jalankan di VM dengan env frame saat ini."""
+        from hambalang.compiler import _FunctionCompiler
+        from hambalang.lexer import EOF, NEWLINE, tokenize
         from hambalang.parser import Parser
-        from hambalang.lexer import tokenize
+        from hambalang.vm import Frame
+        saved_trace, saved_line, saved_steps = vm.trace, vm.rt.current_line, vm.rt.steps
         try:
             p = Parser(tokenize(expr_src))
             expr = p.parse_expression()
-            interp = Interpreter(vm.rt)
-            print(Style.wrap("93", repr_value(interp.eval(expr, frame.env))))
+            if p.tok.type not in (NEWLINE, EOF):
+                raise SalahKetik(f"Token tidak terduga {p.describe(p.tok)}")
+            fc = _FunctionCompiler("<eval>", "modul", [])
+            fc.expr(expr)
+            fc.emit(B.RETURN)
+            vm.trace = None
+            vm.frames.append(Frame(fc.co, frame.env, is_call=False))
+            value = vm._run(len(vm.frames) - 1)
+            print(Style.wrap("93", repr_value(value)))
         except HambaError as e:
             print(f"  {e}")
         finally:
-            vm.rt.call_function = vm.call_function
+            vm.trace, vm.rt.current_line, vm.rt.steps = saved_trace, saved_line, saved_steps
 
 
 def cmd_debug(args) -> int:

@@ -8,6 +8,7 @@ identik — test suite membandingkan output keduanya.
 """
 import json
 import math
+import operator
 import random
 import sys
 import time
@@ -262,7 +263,40 @@ def _num_operands(op: str, a: Any, b: Any):
     return a, b
 
 
+# Batas ukuran hasil operator supaya program (terutama di sandbox/playground)
+# tidak bisa menghabiskan memori/CPU dengan satu ekspresi.
+MAX_SEQUENCE = 10_000_000
+MAX_INT_BITS = 100_000
+
+
+def _repeat(seq: Any, n: int) -> Any:
+    if n > 0 and len(seq) * n > MAX_SEQUENCE:
+        raise OperasiIlegal(f"Hasil terlalu besar (> {MAX_SEQUENCE:,} elemen). Anggaran memori tidak cukup.")
+    return seq * n
+
+
+# Fast path untuk angka (int/float, bukan bool): semantik identik dengan
+# _binary_op, tanpa rangkaian pengecekan tipe. Ini jalur terpanas kedua engine.
+_NUMERIC_FAST = {
+    "+": operator.add, "-": operator.sub,
+    "<": operator.lt, ">": operator.gt, "<=": operator.le, ">=": operator.ge,
+    "==": operator.eq, "!=": operator.ne,
+}
+_NUMBER_TYPES = (int, float)
+
+
 def binary_op(op: str, a: Any, b: Any) -> Any:
+    try:
+        if type(a) in _NUMBER_TYPES and type(b) in _NUMBER_TYPES:
+            fast = _NUMERIC_FAST.get(op)
+            if fast is not None:
+                return fast(a, b)
+        return _binary_op(op, a, b)
+    except OverflowError:
+        raise OperasiIlegal(f"Hasil '{op}' terlalu besar (melebihi APBN)")
+
+
+def _binary_op(op: str, a: Any, b: Any) -> Any:
     if op == "+":
         if isinstance(a, str) or isinstance(b, str):
             return to_str(a) + to_str(b)
@@ -277,10 +311,12 @@ def binary_op(op: str, a: Any, b: Any) -> Any:
         return a - b
     if op == "*":
         if isinstance(a, (str, list)) and isinstance(b, int) and not isinstance(b, bool):
-            return a * b
+            return _repeat(a, b)
         if isinstance(b, (str, list)) and isinstance(a, int) and not isinstance(a, bool):
-            return b * a
+            return _repeat(b, a)
         a, b = _num_operands(op, a, b)
+        if isinstance(a, int) and isinstance(b, int) and a.bit_length() + b.bit_length() > MAX_INT_BITS:
+            raise OperasiIlegal("Hasil perkalian terlalu besar (melebihi APBN)")
         return a * b
     if op == "/":
         a, b = _num_operands(op, a, b)
@@ -296,6 +332,9 @@ def binary_op(op: str, a: Any, b: Any) -> Any:
         return a % b
     if op == "**":
         a, b = _num_operands(op, a, b)
+        if isinstance(a, int) and isinstance(b, int) and b > 0 and abs(a) > 1 \
+                and b * a.bit_length() > MAX_INT_BITS:
+            raise OperasiIlegal("Hasil pangkat terlalu besar (melebihi APBN)")
         try:
             result = a ** b
         except ZeroDivisionError:

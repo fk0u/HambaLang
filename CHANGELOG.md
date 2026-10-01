@@ -29,8 +29,9 @@ All notable changes to HambaLang will be documented in this file.
   evaluasi ekspresi), `check`, `repl`, `ctf`; laporan error dengan cuplikan
   source dan caret; `--seed`, `--step-limit`, `--sandbox`, `--audit`, `--fast`.
 - `pyproject.toml` dengan entry point `hambalang`; extras `[http]`, `[db]`, `[dev]`.
-- Test suite pytest (240+ test): setiap test semantik jalan di interpreter dan
-  VM; differential testing semua contoh & CTF; round-trip bytecode; CLI E2E.
+- Test suite pytest (650+ test): setiap test semantik jalan di interpreter dan
+  VM; differential testing semua contoh & CTF + 400 program fuzz acak;
+  round-trip bytecode; CLI E2E.
 - Spesifikasi baru yang sesuai implementasi: `docs/Grammar.ebnf`,
   `docs/HambaLang_Spec.md`, `docs/VM_Spec.md`, `SYNTAX.md`.
 

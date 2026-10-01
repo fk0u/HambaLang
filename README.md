@@ -146,14 +146,15 @@ Spesifikasi: [Language Spec](docs/HambaLang_Spec.md) · [VM Spec](docs/VM_Spec.m
 
 ```bash
 pip install -e ".[dev]"
-pytest            # 240+ test
+pytest            # 650+ test (termasuk 400 program fuzz)
 ruff check hambalang tests
 ```
 
 Setiap test semantik dijalankan dua kali — di interpreter dan di HambaVM v4.
-Semua program di `examples/` dan `ctf/` diuji dengan *differential testing*:
-outputnya harus identik byte-per-byte di kedua engine, dan bytecode-nya harus
-lolos round-trip serialisasi.
+Semua program di `examples/` dan `ctf/`, plus 400 program acak dari fuzzer
+(`tests/test_fuzz.py`), diuji dengan *differential testing*: output, jenis
+error, pesan, dan nomor barisnya harus identik di kedua engine. Bytecode semua
+contoh juga harus lolos round-trip serialisasi.
 
 ---
 

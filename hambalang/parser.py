@@ -597,6 +597,8 @@ class Parser:
                 if not self.tok.is_op("("):
                     raise self.error("Diharapkan '(' setelah 'Janji nama'")
                 return callee
+            if t.value in ("bukan", "BUKAN"):
+                raise self.error(f"'{t.value}' di posisi ini harus diberi kurung, mis. ({t.value} x)")
             if t.value in KEYWORDS:
                 raise self.error(f"Kata kunci '{t.value}' tidak bisa dipakai di dalam ekspresi")
             self.advance()

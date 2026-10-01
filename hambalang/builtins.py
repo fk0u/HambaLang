@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 from hambalang.errors import OperasiIlegal, ProgramSelesai, ProyekMangkrak
-from hambalang.runtime import (Builtin, HambaFunction, Runtime, deep_copy, format_number,
+from hambalang.runtime import (MAX_SEQUENCE, Builtin, HambaFunction, Runtime, deep_copy, format_number,
                                is_number, repr_value, to_number, to_str,
                                truthy, type_name)
 
@@ -217,7 +217,7 @@ def _rentang(rt, a, b=None, step=1):
     if step == 0:
         raise OperasiIlegal("rentang() dengan langkah 0")
     r = range(a, b, step)
-    if len(r) > 10_000_000:
+    if len(r) > MAX_SEQUENCE:
         raise OperasiIlegal("rentang() terlalu besar (anggaran memori tidak cukup)")
     return list(r)
 
@@ -391,7 +391,8 @@ def _akhiri_dengan(rt, s, p):
 @builtin("ulangi", 2)
 def _ulangi(rt, s, n):
     _expect("ulangi", s, "teks")
-    return s * max(0, _int("ulangi", n))
+    from hambalang.runtime import binary_op
+    return binary_op("*", s, max(0, _int("ulangi", n)))
 
 
 @builtin("rupiah", 1)

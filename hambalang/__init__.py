@@ -31,8 +31,8 @@ if sys.getrecursionlimit() < 20000:
 
 def execute(source: str, runtime: Runtime, engine: str = "interpreter", filename: str = "<input>"):
     """Parse + jalankan ``source`` dengan runtime yang sudah disiapkan."""
-    program = parse(source)
     try:
+        program = parse(source)
         if engine == "vm":
             from hambalang.compiler import compile_program
             from hambalang.vm import VM

@@ -87,12 +87,13 @@ def test_repl_multiline_and_values(capsys, monkeypatch):
 
 
 def test_debugger_breakpoint_and_print(workdir, capsys, monkeypatch):
-    f = write(workdir / "d.hl", "a = 1\nb = a + 41\nlapor b\n")
-    feed = iter(["p a + 1", "vars", "c"])
+    f = write(workdir / "d.hl", "fungsi dobel(n)\n  kembalikan n * 2\nakhir\na = 1\nb = a + 41\nlapor b\n")
+    feed = iter(["p a + 1", "p dobel(b)", "p tidak_ada", "vars", "c"])
     monkeypatch.setattr("builtins.input", lambda prompt="": next(feed))
-    assert main(["debug", f, "-b", "3"]) == 0
+    assert main(["debug", f, "-b", "6"]) == 0
     out = capsys.readouterr().out
-    assert "→   3 | lapor b" in out and "\n2\n" in out and "b = 42" in out and "Program selesai" in out
+    assert "→   6 | lapor b" in out and "\n2\n" in out and "\n84\n" in out
+    assert "tidak ditemukan" in out and "b = 42" in out and "Program selesai" in out
 
 
 # ------------------------------------------------------------------ legacy v3
