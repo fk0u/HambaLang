@@ -590,6 +590,17 @@ def cmd_legacy(args) -> int:
 
 # ===================================================================== main
 
+def _delay_seconds(text: str) -> float:
+    import math
+    try:
+        value = float(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"bukan angka: {text}")
+    if not math.isfinite(value) or not 0 <= value <= 60:
+        raise argparse.ArgumentTypeError("--delay harus antara 0 dan 60 detik")
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hambalang",
@@ -619,7 +630,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_opts(r)
     r.add_argument("--vm", action="store_true", help="kompilasi ke bytecode lalu jalankan di HambaVM v4")
     r.add_argument("--fast", "--cepat", action="store_true", help="lewati jeda Mangkrak()")
-    r.add_argument("--delay", type=float, default=0.0, help="jeda per langkah dalam detik (visualisasi)")
+    r.add_argument("--delay", type=_delay_seconds, default=0.0, help="jeda per langkah dalam detik (visualisasi)")
     r.add_argument("--audit", action="store_true", help="cetak laporan audit di akhir")
     r.add_argument("--strict", action="store_true", help="sandbox + seed 0 bila tidak diberikan")
     r.add_argument("--trace", "--debug", action="store_true", help="cetak setiap baris yang dieksekusi (VM)")

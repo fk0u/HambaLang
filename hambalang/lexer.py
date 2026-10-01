@@ -40,6 +40,8 @@ OPERATORS = [
     "(", ")", "[", "]", "{", "}", ",", ":", ".",
 ]
 
+MAX_INT_DIGITS = 4000
+
 ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "\\": "\\", '"': '"', "'": "'", "0": "\0"}
 
 
@@ -196,10 +198,10 @@ class Lexer:
             raise self.error(f"Angka tidak valid: {text}{self.peek()}")
         if is_float:
             return float(text)
-        try:
-            return int(text)
-        except ValueError:  # batas digit konversi int Python
-            raise self.error("Literal angka terlalu panjang")
+        # Batas bahasa (bukan batas CPython yang berbeda antar versi).
+        if len(text) > MAX_INT_DIGITS:
+            raise self.error(f"Literal angka terlalu panjang (maks {MAX_INT_DIGITS} digit)")
+        return int(text)
 
     def _string(self) -> str:
         quote = self.advance()
@@ -214,10 +216,13 @@ class Lexer:
             if ch == "\\":
                 if self.pos >= len(self.src):
                     raise SalahKetik("String tidak ditutup", start_line)
+                # Posisi backslash dicatat sebelum advance (esc bisa berupa newline).
+                esc_line, esc_col = self.line, self.col - 1
                 esc = self.advance()
                 if esc not in ESCAPES:
-                    raise SalahKetik(f"Escape tidak dikenal: \\{esc} (yang valid: \\n \\t \\r \\0 \\\\ \\\" \\')",
-                                     self.line, self.col - 2)
+                    shown = esc if esc.isprintable() else repr(esc)[1:-1]
+                    raise SalahKetik(f"Escape tidak dikenal: \\{shown} (yang valid: \\n \\t \\r \\0 \\\\ \\\" \\')",
+                                     esc_line, esc_col)
                 out.append(ESCAPES[esc])
             else:
                 out.append(ch)

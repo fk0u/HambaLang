@@ -158,3 +158,23 @@ def test_loader_reports_corrupt_strings():
     data[i:i + 3] = b"\xff\xfe\xfd"
     with pytest.raises(B.BytecodeError):
         B.loads(bytes(data))
+
+
+@pytest.mark.parametrize("bad", [(B.CALL, 99), (B.POP, 0), (B.BUILD_DICT, 5), (B.BINARY, 0)])
+def test_loader_rejects_stack_underflow(bad):
+    co = compile_source("lapor 1")
+    co.code.insert(0, bad)
+    co.lines.insert(0, 1)
+    with pytest.raises(B.BytecodeError, match="underflow"):
+        B.loads(B.dumps(co))
+
+
+def test_legacy_decimal_bigint_tag_still_loads():
+    import struct
+    co = compile_source("lapor 1")
+    data = B.dumps(co)
+    # Ganti konstanta int 1 (tag 'I') dengan tag lama 'B' (teks desimal).
+    old = b"I" + struct.pack("<q", 1)
+    big = str(10 ** 30).encode()
+    patched = data.replace(old, b"B" + struct.pack("<I", len(big)) + big, 1)
+    assert B.loads(patched).consts[co.consts.index(1)] == 10 ** 30

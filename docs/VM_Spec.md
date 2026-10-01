@@ -49,7 +49,8 @@ CodeObject:
 
 const := tag u8 + payload
   'N' kosong   'T' benar   'F' salah
-  'I' i64      'B' bigint (str desimal)   'D' f64
+  'I' i64      'X' bigint (u32 n + n byte two's-complement LE)   'D' f64
+  'B' bigint sebagai str desimal (format awal; hanya dibaca, tidak ditulis)
   'S' str      'C' CodeObject (fungsi bersarang)
 
 str := u32 panjang + byte UTF-8
@@ -60,6 +61,14 @@ Header kompatibel dengan bytecode legacy v3 (magic sama, versi `u16` di offset
 
 Konstanta di-deduplikasi berdasarkan `(tipe, nilai)` — `1`, `1.0`, dan `benar`
 tetap konstanta terpisah.
+
+### Verifikasi saat load
+
+`load` menolak file (dengan `BytecodeError`) bila ada index konstanta/nama
+di luar jangkauan, target lompat tidak valid, operator tidak dikenal, atau
+kedalaman operand stack yang bisa underflow / tidak konsisten di titik
+pertemuan aliran kontrol (dicek seperti verifier JVM). VM tidak pernah
+menjalankan bytecode yang belum lolos verifikasi.
 
 ## 3. Instruction set
 
@@ -115,15 +124,23 @@ env blok sehingga assignment menembus ke luar.
 ## 5. Kompilasi kontrol alur
 
 ```
-selama c:                 untuk x dalam e / dari..sampai / Rapat(n):
-  top:  <c>                    <iterator>
-        JUMP_IF_FALSE end   top: FOR_ITER end
-        <body>                   STORE_NAME x      (Rapat: POP)
-  cont: LINE                     <body>
-        JUMP top           cont: LINE              (target 'lanjut')
-  end:                           JUMP top
-                            brk: POP               (hanya bila ada 'hentikan')
-                            end:
+selama c:
+  top:  <c>
+        JUMP_IF_FALSE end
+        <body>
+  cont: LINE               (target 'lanjut')
+        JUMP top
+  end:
+
+untuk x dalam e / untuk i dari..sampai / Rapat(n):
+        <iterator>
+  top:  FOR_ITER end       (habis: pop iterator, lompat ke end)
+        STORE_NAME x       (Rapat: POP)
+        <body>
+  cont: LINE               (target 'lanjut')
+        JUMP top
+  brk:  POP                (hanya bila ada 'hentikan')
+  end:
 ```
 
 `hentikan`/`lanjut` di dalam `coba` atau `mulai` lebih dulu memancarkan
@@ -171,5 +188,6 @@ mendukung subset dialek advanced (`set`, `lapor`, `Korupsi`, `jika` tanpa
 `atau`, `Rapat(n)`). Ekspresi diparse dengan parser v6 lalu diturunkan ke
 opcode v3; karena format v3 tidak punya tipe boolean/kosong, `benar`/`salah`
 menjadi `1`/`0`, `kosong` menjadi `0`, dan `dan`/`atau` menghasilkan 1/0
-(tetap short-circuit). Fungsi, daftar, objek, dan pemanggilan fungsi
-ditolak dengan pesan yang menyarankan `hambalang compile` (HBC v4). Gunakan `hambalang compile --legacy` untuk menghasilkannya.
+(tetap short-circuit). Definisi `fungsi` ditolak parser legacy
+(`Syntax tidak dikenali`); daftar, objek, dan pemanggilan fungsi di dalam
+ekspresi ditolak dengan pesan yang menyarankan `hambalang compile` (HBC v4). Gunakan `hambalang compile --legacy` untuk menghasilkannya.

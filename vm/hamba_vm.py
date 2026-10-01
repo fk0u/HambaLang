@@ -146,6 +146,8 @@ class HambaVM:
         elif opcode == OP_MOD:
             b = self.stack.pop()
             a = self.stack.pop()
+            if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+                raise Exception("Modulo hanya untuk angka")
             if b == 0:
                 raise Exception("Modulo dengan nol")
             self.stack.append(a % b)

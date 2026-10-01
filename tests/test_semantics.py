@@ -543,7 +543,7 @@ def test_repeated_squaring_is_bounded(run):
 @pytest.mark.parametrize("src", [
     "untuk i dari 1 sampai 1000000000\nakhir",
     "Rapat(1000000000000000000)\nselesaiRapat",
-    "untuk x dalam rentang(9000000)\nakhir",
+    "untuk x dalam rentang(2000)\nakhir",
 ])
 def test_empty_loops_still_hit_step_limit(run, src):
     with pytest.raises(NegaraBangkrut):

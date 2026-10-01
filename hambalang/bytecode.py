@@ -14,7 +14,9 @@ Layout file (little-endian)::
         consts u16 + const*
 
     const = tag u8 + payload
-        'N' kosong | 'T' benar | 'F' salah | 'I' i64 | 'B' bigint (str)
+        'N' kosong | 'T' benar | 'F' salah | 'I' i64
+        'X' bigint (u32 panjang + byte two's-complement little-endian)
+        'B' bigint (str desimal; hanya dibaca, format lama)
         'D' f64    | 'S' str   | 'C' CodeObject
     str = u32 panjang + utf-8
 
@@ -121,8 +123,9 @@ def _w_const(f: BinaryIO, c: Any):
             f.write(b"I" + struct.pack("<q", c))
         else:
             # Bigint: byte two's-complement (tidak kena batas digit konversi str<->int).
+            # Tag 'X' (bukan 'B') supaya file lama dengan 'B' desimal tetap terbaca.
             data = c.to_bytes((c.bit_length() + 8) // 8, "little", signed=True)
-            f.write(b"B" + struct.pack("<I", len(data)))
+            f.write(b"X" + struct.pack("<I", len(data)))
             f.write(data)
     elif isinstance(c, float):
         f.write(b"D" + struct.pack("<d", c))
@@ -182,6 +185,71 @@ def _validate(co: CodeObject):
             bad = f"operator unary {arg} tidak dikenal"
         if bad:
             raise BytecodeError(f"'{co.name}' instruksi {i} ({name}): {bad}")
+    _check_stack(co)
+
+
+def _stack_effect(name: str, arg: int):
+    """(jumlah item minimal di stack, perubahan kedalaman) untuk jalur fall-through."""
+    table = {
+        "NOP": (0, 0), "LINE": (0, 0), "LOAD_CONST": (0, 1), "LOAD_NAME": (0, 1),
+        "STORE_NAME": (1, -1), "POP": (1, -1), "DUP": (1, 1), "DUP2": (2, 2),
+        "BINARY": (2, -1), "UNARY": (1, 0), "INDEX_GET": (2, -1), "INDEX_SET": (3, -3),
+        "ATTR_GET": (1, 0), "ATTR_SET": (2, -2), "PRINT": (1, -1), "MAKE_FUNCTION": (0, 1),
+        "PUSH_SCOPE": (0, 0), "POP_SCOPE": (0, 0), "SETUP_TRY": (0, 0), "POP_TRY": (0, 0),
+        "GET_ITER": (1, 0), "RANGE_ITER": (3, -2), "REPEAT_ITER": (1, 0), "GLOBAL": (0, 0),
+        "JUMP": (0, 0), "JUMP_IF_FALSE": (1, -1), "JUMP_IF_FALSE_OR_POP": (1, -1),
+        "JUMP_IF_TRUE_OR_POP": (1, -1), "FOR_ITER": (1, 1),
+        "RETURN": (1, -1), "RAISE": (1, -1), "HALT": (0, 0),
+    }
+    if name == "BUILD_LIST":
+        return arg, 1 - arg
+    if name == "BUILD_DICT":
+        return 2 * arg, 1 - 2 * arg
+    if name == "CALL":
+        return arg + 1, -arg
+    if name == "INPUT":
+        return arg, 1 - arg
+    return table[name]
+
+
+def _check_stack(co: CodeObject):
+    """
+    Verifikasi kedalaman operand stack lewat aliran kontrol (seperti verifier
+    JVM): tidak ada underflow dan kedalaman konsisten di setiap titik pertemuan.
+    """
+    n = len(co.code)
+    depth = [None] * n
+    work = [(0, 0)]
+    while work:
+        pc, d = work.pop()
+        while pc < n:
+            if depth[pc] is not None:
+                if depth[pc] != d:
+                    raise BytecodeError(f"'{co.name}' instruksi {pc}: kedalaman stack tidak konsisten")
+                break
+            depth[pc] = d
+            op, arg = co.code[pc]
+            name = OPCODES[op]
+            need, delta = _stack_effect(name, arg)
+            if d < need:
+                raise BytecodeError(f"'{co.name}' instruksi {pc} ({name}): stack underflow")
+            if name in ("RETURN", "RAISE", "HALT"):
+                break
+            if name == "JUMP":
+                pc, d = arg, d
+                continue
+            if name in ("JUMP_IF_FALSE_OR_POP", "JUMP_IF_TRUE_OR_POP"):
+                work.append((arg, d))  # lompat: nilai tetap di stack
+            elif name == "JUMP_IF_FALSE":
+                work.append((arg, d - 1))
+            elif name == "FOR_ITER":
+                work.append((arg, d - 1))  # habis: iterator di-pop
+            elif name == "SETUP_TRY":
+                work.append((arg, d + 1))  # handler menerima pesan error
+            d += delta
+            pc += 1
+        else:
+            raise BytecodeError(f"'{co.name}': eksekusi bisa melewati akhir kode")
 
 
 def _r_const(f: BinaryIO) -> Any:
@@ -194,9 +262,11 @@ def _r_const(f: BinaryIO) -> Any:
         return False
     if tag == b"I":
         return struct.unpack("<q", _r_exact(f, 8))[0]
-    if tag == b"B":
+    if tag == b"X":
         (n,) = struct.unpack("<I", _r_exact(f, 4))
         return int.from_bytes(_r_exact(f, n), "little", signed=True)
+    if tag == b"B":  # format awal: bigint sebagai teks desimal
+        return int(_r_str(f))
     if tag == b"D":
         return struct.unpack("<d", _r_exact(f, 8))[0]
     if tag == b"S":
