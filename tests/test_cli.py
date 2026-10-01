@@ -122,3 +122,12 @@ def test_legacy_shim_entrypoint(workdir, capsys):
         sys.argv = old
     assert exc.value.code == 0
     assert "via shim" in capsys.readouterr().out
+
+
+def test_legacy_compiler_uses_correct_precedence(workdir, capsys):
+    f = write(workdir / "l.hl", 'set x = 10 - 2 - 3\nlapor x\nset y = 2 + 3 * 4\nlapor y\n'
+                                'jika x >= 5 dan y != 0\n  lapor "ok"\nakhir\nlapor "n=" + y\n')
+    assert main(["compile", f, "--legacy", "-o", "l.hbc"]) == 0
+    assert main(["run", "l.hbc"]) == 0
+    out = capsys.readouterr().out.splitlines()
+    assert ["5", "14", "ok", "n=14"] == [line for line in out if line in ("5", "14", "ok", "n=14")]

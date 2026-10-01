@@ -176,6 +176,11 @@ cd web && npm install && npm run dev
 Build menyalin `hambalang/` ke `static/` lalu Pyodide menjalankannya di
 browser — interpreter dan VM yang sama dengan CLI, mode sandbox.
 
+## ✍️ Editor
+
+Syntax highlighting VS Code ada di [`editors/vscode`](editors/vscode/README.md)
+(semua dialek, auto-indent, folding blok).
+
 ## 🐳 Docker
 
 ```bash

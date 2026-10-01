@@ -28,6 +28,7 @@ All notable changes to HambaLang will be documented in this file.
 - CLI terpadu: `run`, `compile`, `disasm`, `debug` (breakpoint, step,
   evaluasi ekspresi), `check`, `repl`, `ctf`; laporan error dengan cuplikan
   source dan caret; `--seed`, `--step-limit`, `--sandbox`, `--audit`, `--fast`.
+- Contoh baru `examples/v6_showcase.hl` dan ekstensi VS Code (`editors/vscode`).
 - `pyproject.toml` dengan entry point `hambalang`; extras `[http]`, `[db]`, `[dev]`.
 - Test suite pytest (650+ test): setiap test semantik jalan di interpreter dan
   VM; differential testing semua contoh & CTF + 400 program fuzz acak;
@@ -50,6 +51,11 @@ All notable changes to HambaLang will be documented in this file.
 - Mode sandbox memblokir file/DB/HTTP (aktif di CTF dan playground).
 - `queryDB(db, sql, params)` mendukung placeholder untuk mencegah SQL injection.
 - Batas langkah tidak bisa ditangkap `coba`; rekursi dibatasi 200 lapis.
+
+### Fixed (legacy v3)
+- Compiler v3 kini memakai parser v6 untuk ekspresi: precedence benar,
+  `>=`/`<=`/`!=`/`dan`/`atau`/unary didukung (sebelumnya stack underflow).
+- HambaVM v3 & ObfuscatedVM: `"teks" + angka` tidak lagi crash.
 
 ### Compatibility
 - Toolchain legacy v3 (compiler lama, obfuscator, ObfuscatedVM, Hell Mode)

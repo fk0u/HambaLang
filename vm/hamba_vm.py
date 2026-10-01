@@ -123,7 +123,10 @@ class HambaVM:
         elif opcode == OP_ADD:
             b = self.stack.pop()
             a = self.stack.pop()
-            self.stack.append(a + b)
+            if isinstance(a, str) or isinstance(b, str):
+                self.stack.append(f"{a}{b}")  # "teks" + angka = gabung teks
+            else:
+                self.stack.append(a + b)
             self.pc += 1
         
         elif opcode == OP_SUB:

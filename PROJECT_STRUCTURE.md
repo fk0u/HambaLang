@@ -22,6 +22,7 @@ HambaLang/
 │   └── history/             catatan Phase 1–5 (arsip)
 ├── paper/                   paper gaya SIGBOVIK
 ├── web/                     playground SvelteKit + Pyodide
+├── editors/vscode/          syntax highlighting .hl untuk VS Code
 │
 ├── cli/                     shim CLI lama → hambalang.cli (+ perintah legacy)
 ├── interpreter/             shim hamba.py/hamba_v2.py; hamba_advanced.py (parser legacy v3)
