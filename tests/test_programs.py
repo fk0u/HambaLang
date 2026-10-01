@@ -178,3 +178,18 @@ def test_legacy_decimal_bigint_tag_still_loads():
     big = str(10 ** 30).encode()
     patched = data.replace(old, b"B" + struct.pack("<I", len(big)) + big, 1)
     assert B.loads(patched).consts[co.consts.index(1)] == 10 ** 30
+
+
+@pytest.mark.parametrize("prefix,msg", [
+    ([(B.POP_TRY, 0)], "POP_TRY tanpa SETUP_TRY"),
+    ([(B.POP_SCOPE, 0)], "POP_SCOPE tanpa PUSH_SCOPE"),
+    ([(B.INPUT, 2)], "operand harus 0 atau 1"),
+    # Dua jalur bertemu di instruksi 3 dengan kedalaman stack berbeda (1 vs 0).
+    ([(B.LOAD_CONST, 0), (B.JUMP_IF_FALSE, 3), (B.LOAD_CONST, 0)], "tidak konsisten"),
+])
+def test_loader_rejects_unbalanced_structure(prefix, msg):
+    co = compile_source("lapor 1")
+    co.code[0:0] = prefix
+    co.lines[0:0] = [1] * len(prefix)
+    with pytest.raises(B.BytecodeError, match=msg):
+        B.loads(B.dumps(co))

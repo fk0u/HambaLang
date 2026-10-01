@@ -141,3 +141,18 @@ def test_legacy_modulo_and_short_circuit(workdir, capsys):
     assert main(["run", "m.hbc"]) == 0
     out = capsys.readouterr().out.splitlines()
     assert "2" in out and "atau-ok" in out and "salah" not in out and "x=1" in out
+
+
+@pytest.mark.parametrize("bad", ["abc", "-1", "61", "inf", "nan"])
+def test_delay_rejects_invalid_values(workdir, capsys, bad):
+    f = write(workdir / "d.hl", "lapor 1\n")
+    with pytest.raises(SystemExit) as exc:
+        main(["run", f, "--delay", bad])
+    assert exc.value.code == 2
+    assert "--delay" in capsys.readouterr().err
+
+
+def test_delay_accepts_valid_value(workdir, capsys):
+    f = write(workdir / "d.hl", "lapor 1\n")
+    assert main(["run", f, "--delay", "0.001"]) == 0
+    assert capsys.readouterr().out.strip() == "1"

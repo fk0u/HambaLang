@@ -208,26 +208,31 @@ def _stack_effect(name: str, arg: int):
     if name == "CALL":
         return arg + 1, -arg
     if name == "INPUT":
+        if arg not in (0, 1):
+            raise BytecodeError(f"INPUT: operand harus 0 atau 1, bukan {arg}")
         return arg, 1 - arg
     return table[name]
 
 
 def _check_stack(co: CodeObject):
     """
-    Verifikasi kedalaman operand stack lewat aliran kontrol (seperti verifier
-    JVM): tidak ada underflow dan kedalaman konsisten di setiap titik pertemuan.
+    Verifikasi struktur lewat aliran kontrol (seperti verifier JVM). State per
+    instruksi = (kedalaman operand stack, jumlah handler 'coba', kedalaman scope):
+    tidak boleh underflow, POP_TRY/POP_SCOPE harus punya pasangan, dan state
+    harus sama di setiap titik pertemuan.
     """
     n = len(co.code)
-    depth = [None] * n
-    work = [(0, 0)]
+    seen = [None] * n
+    work = [(0, 0, 0, 0)]  # (pc, stack, handlers, scopes)
     while work:
-        pc, d = work.pop()
+        pc, d, h, sc = work.pop()
         while pc < n:
-            if depth[pc] is not None:
-                if depth[pc] != d:
-                    raise BytecodeError(f"'{co.name}' instruksi {pc}: kedalaman stack tidak konsisten")
+            state = (d, h, sc)
+            if seen[pc] is not None:
+                if seen[pc] != state:
+                    raise BytecodeError(f"'{co.name}' instruksi {pc}: kedalaman stack/blok tidak konsisten")
                 break
-            depth[pc] = d
+            seen[pc] = state
             op, arg = co.code[pc]
             name = OPCODES[op]
             need, delta = _stack_effect(name, arg)
@@ -236,16 +241,28 @@ def _check_stack(co: CodeObject):
             if name in ("RETURN", "RAISE", "HALT"):
                 break
             if name == "JUMP":
-                pc, d = arg, d
+                pc = arg
                 continue
             if name in ("JUMP_IF_FALSE_OR_POP", "JUMP_IF_TRUE_OR_POP"):
-                work.append((arg, d))  # lompat: nilai tetap di stack
+                work.append((arg, d, h, sc))  # lompat: nilai tetap di stack
             elif name == "JUMP_IF_FALSE":
-                work.append((arg, d - 1))
+                work.append((arg, d - 1, h, sc))
             elif name == "FOR_ITER":
-                work.append((arg, d - 1))  # habis: iterator di-pop
+                work.append((arg, d - 1, h, sc))  # habis: iterator di-pop
             elif name == "SETUP_TRY":
-                work.append((arg, d + 1))  # handler menerima pesan error
+                # Handler: pesan error di-push, handler dilepas, env/scope dipulihkan.
+                work.append((arg, d + 1, h, sc))
+                h += 1
+            elif name == "POP_TRY":
+                if h == 0:
+                    raise BytecodeError(f"'{co.name}' instruksi {pc}: POP_TRY tanpa SETUP_TRY")
+                h -= 1
+            elif name == "PUSH_SCOPE":
+                sc += 1
+            elif name == "POP_SCOPE":
+                if sc == 0:
+                    raise BytecodeError(f"'{co.name}' instruksi {pc}: POP_SCOPE tanpa PUSH_SCOPE")
+                sc -= 1
             d += delta
             pc += 1
         else:

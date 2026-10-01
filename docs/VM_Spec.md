@@ -65,9 +65,10 @@ tetap konstanta terpisah.
 ### Verifikasi saat load
 
 `load` menolak file (dengan `BytecodeError`) bila ada index konstanta/nama
-di luar jangkauan, target lompat tidak valid, operator tidak dikenal, atau
-kedalaman operand stack yang bisa underflow / tidak konsisten di titik
-pertemuan aliran kontrol (dicek seperti verifier JVM). VM tidak pernah
+di luar jangkauan, target lompat tidak valid, operator tidak dikenal, operand
+`INPUT` selain 0/1, atau bila — ditelusuri lewat aliran kontrol seperti
+verifier JVM — operand stack bisa underflow, `POP_TRY`/`POP_SCOPE` tidak
+punya pasangan, atau kedalaman stack/handler/scope berbeda di titik pertemuan. VM tidak pernah
 menjalankan bytecode yang belum lolos verifikasi.
 
 ## 3. Instruction set
