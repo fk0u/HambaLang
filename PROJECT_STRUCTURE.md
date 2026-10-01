@@ -1,160 +1,47 @@
-# HambaLang v2.0 - Project Structure
+# Struktur Proyek HambaLang v6
 
 ```
 HambaLang/
+├── hambalang/               ⭐ Core terpadu (dipakai CLI, test, dan web)
+│   ├── lexer.py             token + posisi, escape, komentar
+│   ├── parser.py            recursive descent, semua dialek → satu AST
+│   ├── nodes.py             definisi AST
+│   ├── interpreter.py       tree-walking interpreter (engine referensi)
+│   ├── compiler.py          AST → bytecode HBC v4
+│   ├── bytecode.py          opcode, format .hbc, disassembler
+│   ├── vm.py                HambaVM v4 (stack machine berbasis frame)
+│   ├── runtime.py           nilai, operator, scope, state negara
+│   ├── builtins.py          standard library
+│   ├── errors.py            SalahKetik, OperasiIlegal, ProyekMangkrak, NegaraBangkrut
+│   └── cli.py               run/compile/disasm/debug/check/repl/ctf
 │
-├── 📁 interpreter/              # Core interpreters
-│   ├── hamba.py                # Original v1.0 interpreter
-│   └── hamba_v2.py             # Full-featured v2.0 interpreter ⭐
+├── tests/                   pytest: parser, semantik (×2 engine), program, CLI
+├── examples/                contoh program .hl (+ .hbc legacy v3)
+├── ctf/                     CTF pack (dialek formal v5) + Hell Mode legacy
+├── docs/                    Grammar.ebnf, HambaLang_Spec.md, VM_Spec.md, Semantics.md
+│   └── history/             catatan Phase 1–5 (arsip)
+├── paper/                   paper gaya SIGBOVIK
+├── web/                     playground SvelteKit + Pyodide
+├── editors/vscode/          syntax highlighting .hl untuk VS Code
 │
-├── 📁 examples/                 # Example programs (.hl files)
-│   ├── demo.hl                 # Basic demo (v1.0)
-│   ├── full_demo.hl            # Complete feature showcase ⭐
-│   ├── algorithms.hl           # Algorithm examples
-│   ├── database_example.hl     # Database CRUD operations
-│   ├── file_io_example.hl      # File I/O operations
-│   ├── http_api_example.hl     # REST API client
-│   ├── crud_app.hl             # Real-world CRUD application ⭐
-│   ├── corruption.hl           # Satire demo
-│   └── infinite.hl             # RapatInfinite demo
+├── cli/                     shim CLI lama → hambalang.cli (+ perintah legacy)
+├── interpreter/             shim hamba.py/hamba_v2.py; hamba_advanced.py (parser legacy v3)
+├── compiler/, vm/           toolchain bytecode legacy v3
+├── obfuscator/              opcode remapping & junk injection (legacy v3)
+├── wasm/                    eksperimen runtime WebAssembly
 │
-├── 📁 web/                      # Web playground (SvelteKit)
-│   ├── src/
-│   │   └── routes/
-│   │       ├── +page.svelte    # Main playground page ⭐
-│   │       └── +layout.js      # Layout config
-│   ├── static/                 # Static assets
-│   ├── package.json            # Node dependencies
-│   ├── svelte.config.js        # SvelteKit config
-│   ├── vite.config.js          # Vite config
-│   ├── vercel.json             # Vercel deployment config
-│   ├── jsconfig.json           # JavaScript config
-│   └── README.md               # Web-specific docs
-│
-├── 📁 docs/                     # Documentation website
-│   └── index.html              # Full HTML documentation ⭐
-│
-├── 📁 tests/                    # Test suite
-│   └── test_interpreter.py     # Interpreter unit tests
-│
-├── 📁 .github/                  # GitHub configuration
-│   └── workflows/
-│       └── ci.yml              # GitHub Actions CI/CD
-│
-├── 📄 README.md                 # Main documentation ⭐
-├── 📄 INSTALL.md                # Installation guide
-├── 📄 SYNTAX.md                 # Syntax cheat sheet
-├── 📄 CHANGELOG.md              # Version history
-├── 📄 CONTRIBUTING.md           # Contribution guidelines
-├── 📄 LICENSE                   # MIT License
-├── 📄 requirements.txt          # Python dependencies
-├── 📄 Dockerfile                # Docker configuration
-└── 📄 .gitignore                # Git ignore rules
-
+├── pyproject.toml           paket & entry point `hambalang`
+├── Dockerfile
+├── README.md · SYNTAX.md · INSTALL.md · CONTRIBUTING.md · CHANGELOG.md
 ```
 
-## Key Files (⭐)
+## Ke mana kalau ingin…
 
-### 1. **interpreter/hamba_v2.py**
-Main interpreter dengan full features:
-- Variables, functions, loops, arrays, objects
-- Database support (SQLite, MySQL, PostgreSQL)
-- File I/O operations
-- HTTP/REST API client
-- Built-in functions
-- Satire features
-
-### 2. **examples/full_demo.hl**
-Comprehensive example showcasing all features
-
-### 3. **examples/crud_app.hl**
-Real-world CRUD application example
-
-### 4. **web/src/routes/+page.svelte**
-Web playground interface with code editor
-
-### 5. **docs/index.html**
-Complete HTML documentation with:
-- Syntax reference
-- API documentation
-- Examples
-- Tutorials
-
-### 6. **README.md**
-Main project documentation with:
-- Feature overview
-- Quick start guide
-- Usage examples
-- API reference
-
-## File Types
-
-- `.hl` - HambaLang source code files
-- `.py` - Python interpreter code
-- `.svelte` - Svelte components (web UI)
-- `.md` - Markdown documentation
-- `.json` - Configuration files
-- `.html` - HTML documentation
-
-## Dependencies
-
-### Python (Interpreter)
-- Python 3.8+
-- requests (HTTP operations)
-- mysql-connector-python (MySQL support)
-- psycopg2-binary (PostgreSQL support)
-
-### Node.js (Web Playground)
-- Node.js 18+
-- SvelteKit
-- Pyodide (Python in browser)
-- Vite
-
-## Quick Navigation
-
-**Want to...**
-- **Run HambaLang programs?** → `interpreter/hamba_v2.py`
-- **See examples?** → `examples/` directory
-- **Read documentation?** → `docs/index.html` or `README.md`
-- **Contribute?** → `CONTRIBUTING.md`
-- **Learn syntax?** → `SYNTAX.md`
-- **Deploy web?** → `web/` directory
-- **Run tests?** → `tests/test_interpreter.py`
-
-## Total Files Created
-
-- **Interpreters:** 2 files
-- **Examples:** 9 .hl files
-- **Web UI:** 8 files
-- **Documentation:** 6 files
-- **Tests:** 1 file
-- **Config:** 5 files
-- **Total:** ~31 files
-
-## Lines of Code (Approximate)
-
-- **Python (Interpreter):** ~800 lines
-- **HambaLang (.hl):** ~1000+ lines
-- **Svelte (Web UI):** ~400 lines
-- **HTML (Docs):** ~700 lines
-- **Documentation:** ~2000+ lines
-- **Total:** ~4900+ lines
-
-## Technologies Used
-
-1. **Python** - Interpreter
-2. **SvelteKit** - Web framework
-3. **Pyodide** - Python in browser (WASM)
-4. **SQLite/MySQL/PostgreSQL** - Databases
-5. **Vite** - Build tool
-6. **Vercel** - Deployment platform
-7. **Docker** - Containerization
-8. **GitHub Actions** - CI/CD
-
----
-
-**Project Status:** ✅ Production Ready
-
-**Version:** 2.0.0
-
-**Last Updated:** January 12, 2026
+| Tujuan | File |
+|--------|------|
+| Menambah sintaks | `hambalang/parser.py` + `nodes.py`, lalu `interpreter.py` **dan** `compiler.py` |
+| Menambah builtin | `hambalang/builtins.py` (otomatis tersedia di kedua engine) |
+| Mengubah semantik operator/scope | `hambalang/runtime.py` |
+| Menambah opcode | `hambalang/bytecode.py`, `compiler.py`, `vm.py`, `docs/VM_Spec.md` |
+| Menambah perintah CLI | `hambalang/cli.py` |
+| Menambah test | `tests/test_semantics.py` (fixture `run` otomatis menguji kedua engine) |

@@ -1,0 +1,27 @@
+{
+  "name": "hambalang",
+  "displayName": "HambaLang",
+  "description": "Syntax highlighting untuk HambaLang (.hl) — bahasa pemrograman satir birokrasi",
+  "version": "6.0.0",
+  "publisher": "hambalang",
+  "license": "MIT",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "hambalang",
+        "aliases": ["HambaLang", "hambalang"],
+        "extensions": [".hl"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hambalang",
+        "scopeName": "source.hambalang",
+        "path": "./syntaxes/hambalang.tmLanguage.json"
+      }
+    ]
+  }
+}

@@ -10,7 +10,11 @@ lapor "Database: SQLite"
 
 lapor "\n[SETUP] Inisialisasi Database..."
 
-sambungDB("infra_db", "sqlite", "infrastruktur.db")
+// Database khusus contoh ini; tabelnya di-reset setiap kali dijalankan.
+sambungDB("infra_db", "sqlite", "contoh_crud_app.db")
+
+// Mulai dari tabel bersih (hanya di contoh_crud_app.db) supaya contoh ini bisa dijalankan berulang kali
+queryDB("infra_db", "DROP TABLE IF EXISTS proyek")
 
 // Create tables
 create_table = "CREATE TABLE IF NOT EXISTS proyek (
@@ -116,15 +120,18 @@ total_result = queryDB("infra_db", total_anggaran_query)
 total_terpakai_query = "SELECT SUM(anggaran_terpakai) as total FROM proyek"
 terpakai_result = queryDB("infra_db", total_terpakai_query)
 
-lapor "Total Anggaran Semua Proyek: Rp 72.500.000.000"
-lapor "Total Anggaran Terpakai: Rp 56.100.000.000"
-lapor "Sisa Anggaran: Rp 16.400.000.000"
+total_semua = total_result[0]["total"]
+total_terpakai = terpakai_result[0]["total"]
+
+lapor "Total Anggaran Semua Proyek: " + rupiah(total_semua)
+lapor "Total Anggaran Terpakai: " + rupiah(total_terpakai)
+lapor "Sisa Anggaran: " + rupiah(total_semua - total_terpakai)
 
 // Average
 avg_query = "SELECT AVG(anggaran) as rata FROM proyek"
 avg_result = queryDB("infra_db", avg_query)
 
-lapor "Rata-rata Anggaran per Proyek: ~Rp 18.125.000.000"
+lapor "Rata-rata Anggaran per Proyek: " + rupiah(avg_result[0]["rata"])
 
 // ==========================================
 // UPDATE - Ubah Status Proyek
@@ -185,14 +192,16 @@ lapor "\n[REPORT] Laporan Akhir..."
 final_count = "SELECT COUNT(*) as jumlah FROM proyek"
 count_result = queryDB("infra_db", final_count)
 
-lapor "Total proyek aktif: " + teks(count_result)
+lapor "Total proyek aktif: " + teks(count_result[0]["jumlah"])
 
 // By status
 status_summary = "SELECT status, COUNT(*) as jumlah FROM proyek GROUP BY status"
 summary = queryDB("infra_db", status_summary)
 
 lapor "\nRingkasan Status:"
-lapor teks(summary)
+untuk baris dalam summary
+    lapor "  - " + baris["status"] + ": " + baris["jumlah"] + " proyek"
+akhir
 
 // ==========================================
 // SATIRE: Corruption Detection
@@ -236,7 +245,7 @@ tutupDB("infra_db")
 lapor "\n" + "=" * 50
 lapor "=== SISTEM MANAJEMEN PROYEK SELESAI ==="
 lapor "✅ Semua operasi CRUD berhasil dijalankan"
-lapor "📊 Database: infrastruktur.db"
+lapor "📊 Database: contoh_crud_app.db"
 lapor "=" * 50
 
 selesai()

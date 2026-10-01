@@ -90,7 +90,10 @@ npm install
    - Update documentation
 4. **Test Your Changes**
    ```bash
-   python interpreter/hamba_v2.py examples/your_example.hl
+   pip install -e ".[dev]"                  # sekali saja: pytest + ruff
+   pytest                                   # wajib hijau
+   ruff check hambalang tests
+   hambalang run examples/your_example.hl --vm
    ```
 5. **Commit**
    ```bash
@@ -152,17 +155,19 @@ HambaLang adalah satire language. Ketika menambah fitur satire:
 
 ## Testing
 
-### Interpreter Tests
+### Core Tests
 ```bash
-# Test basic features
-python interpreter/hamba_v2.py examples/full_demo.hl
-
-# Test database
-python interpreter/hamba_v2.py examples/database_example.hl
-
-# Test file I/O
-python interpreter/hamba_v2.py examples/file_io_example.hl
+pip install -e ".[dev]"
+pytest                      # parser, semantik (interpreter + VM), program, CLI
+hambalang check examples/*.hl ctf/*.hl
 ```
+
+Aturan emas: **interpreter dan HambaVM harus menghasilkan output identik.**
+Fitur bahasa baru wajib diimplementasikan di `interpreter.py` *dan*
+`compiler.py`/`vm.py`. Tulis test-nya di `tests/test_semantics.py` memakai
+fixture `run` — fixture itu otomatis menjalankan test di kedua engine. Setiap
+file baru di `examples/` otomatis ikut differential test di
+`tests/test_programs.py`.
 
 ### Web Tests
 ```bash

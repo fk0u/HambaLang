@@ -1,211 +1,184 @@
-# HambaLang v2.0 - Syntax Cheat Sheet
+# HambaLang v6 — Syntax Cheat Sheet
 
-## Quick Reference
+Grammar formal: [docs/Grammar.ebnf](docs/Grammar.ebnf) · Spesifikasi: [docs/HambaLang_Spec.md](docs/HambaLang_Spec.md)
 
-### Comments
+## Dasar
+
 ```hl
-// Single-line comment
+// komentar baris          # juga komentar          /* komentar blok */
+lapor "Halo"               // print "Halo" juga boleh
+lapor                      // baris kosong
+x = 1; y = 2               // ';' memisahkan statement di satu baris
 ```
 
-### Print / Output
+## Nilai & tipe
+
+| Tipe (`tipe(x)`) | Contoh | Catatan |
+|------------------|--------|---------|
+| `angka` | `42`, `-7`, `3.14`, `1_000_000`, `1.5e9` | `7 / 2` → `3.5`, `8 / 2` → `4` |
+| `teks` | `"a"`, `'b'`, `"baris\nbaru\t\"kutip\""` | Boleh multi-baris |
+| `boolean` | `benar`, `salah` (atau `BENAR`, `SALAH`) | |
+| `kosong` | `kosong` | null |
+| `daftar` | `[1, "dua", benar]` | Dibagi by-reference; `salin(x)` untuk copy |
+| `objek` | `{nama: "Hambalang", "tahun": 2011}` | Kunci selalu teks |
+| `fungsi` | `fib`, `panjang` | First-class, bisa dikirim sebagai argumen |
+
+**Truthiness:** `salah`, `kosong`, `0`, `""`, `[]`, `{}` dianggap salah; sisanya benar.
+
+## Variabel & assignment
+
 ```hl
-lapor "Message"      // Indonesian style
-print "Message"      // Universal style
+x = 10
+set y = 20                 // gaya advanced
+Anggaran z = 30            // gaya formal v5
+x += 5                     // juga -= *= /= %=
+daftar[0] = "baru"
+obj["kunci"] = 1
+obj.kunci += 1
 ```
 
-### Variables
+Variabel bawaan (selalu global): `anggaran` (awal 1.000.000.000), `progress`,
+`status_proyek`, `total_korupsi` (read-only).
+
+## Operator (prioritas rendah → tinggi)
+
+| Operator | Arti |
+|----------|------|
+| `atau` / `ATAU` | OR (short-circuit, mengembalikan operand) |
+| `dan` / `DAN` | AND (short-circuit) |
+| `bukan` / `BUKAN` | NOT |
+| `== != < > <= >=` | Perbandingan (`1 == benar` → `salah`) |
+| `+ -` | Tambah/kurang. `teks + apa saja` = gabung teks, `daftar + daftar`, `objek + objek` |
+| `* / %` | `"ab" * 3` = `"ababab"` |
+| `-x  !x` | Negasi, NOT |
+| `**` | Pangkat (asosiatif kanan) |
+| `f(x)  a[i]  o.k` | Panggil, index (negatif boleh), properti |
+
+## Percabangan
+
 ```hl
-nama = "Value"
-angka = 123
-aktif = benar        // true
-nonaktif = salah     // false
-kosong_var = kosong  // null
-```
-
-### Data Types
-
-**String:**
-```hl
-text = "Hello"
-text2 = 'World'
-gabung = text + " " + text2
-```
-
-**Number:**
-```hl
-integer = 42
-float_num = 3.14
-```
-
-**Boolean:**
-```hl
-ya = benar
-tidak = salah
-```
-
-**Array:**
-```hl
-list = [1, 2, 3, 4, 5]
-mixed = ["text", 123, benar]
-item = list[0]
-list[1] = 99
-```
-
-**Object:**
-```hl
-obj = {"key": "value", "num": 123}
-val = obj["key"]
-obj["new"] = "data"
-```
-
-### Operators
-
-**Arithmetic:**
-```hl
-+ - * / %
-```
-
-**Comparison:**
-```hl
-== != < > <= >=
-```
-
-**Logical:**
-```hl
-dan     // and
-atau    // or
-```
-
-### Control Flow
-
-**If/Elif/Else:**
-```hl
-jika condition
-    // code
-ataujika other_condition
-    // code
+jika nilai >= 80
+    lapor "A"
+ataujika nilai >= 60          // atau: "atau jika"
+    lapor "B"
 atau
-    // code
+    lapor "C"
 akhir
+
+jika anggaran < 0 maka lapor "Bangkrut"     // satu baris
+
+Sita x == 1 {                               // dialek formal v5
+    Korupsi "satu"
+} Pengadilan Sita x == 2 {
+    Korupsi "dua"
+} Pengadilan {
+    Korupsi "lainnya"
+}
 ```
 
-**While Loop:**
+## Loop
+
 ```hl
-selama condition
-    // code
-    hentikan    // break
-    lanjut      // continue
+untuk i dari 1 sampai 10              // batas atas inklusif
+untuk i dari 10 sampai 0 langkah -2
+untuk item dalam daftar               // juga teks (per karakter) & objek (per kunci)
+selama kondisi
+Rapat(3)                              // ulangi 3 kali
+    ...
+selesaiRapat
+Proyek kondisi { ... }                // while gaya v5
+
+hentikan                              // break
+lanjut                                // continue
+```
+
+Semua loop `untuk`/`selama`/`Rapat` ditutup `akhir` (kecuali `Rapat(n)` → `selesaiRapat`).
+
+## Fungsi & scope
+
+```hl
+fungsi luas(p, l)
+    kembalikan p * l
 akhir
-```
 
-**For Loop (Range):**
-```hl
-untuk i dari 1 sampai 10
-    lapor teks(i)
-akhir
-```
-
-**For Loop (Array):**
-```hl
-untuk item dalam array
-    lapor item
-akhir
-```
-
-### Functions
-
-**Definition:**
-```hl
-fungsi namaFungsi(param1, param2)
-    hasil = param1 + param2
-    kembalikan hasil
-akhir
-```
-
-**Call:**
-```hl
-result = namaFungsi(10, 20)
-```
-
-### Built-in Functions
-
-```hl
-panjang(x)              // length
-tipe(x)                 // type
-angka(x)                // to number
-teks(x)                 // to string
-tambahArray(arr, val)   // append
-hapusArray(arr, index)  // remove
-```
-
-### Database
-
-```hl
-sambungDB("db", "sqlite", "file.db")
-hasil = queryDB("db", "SELECT * FROM table")
-tutupDB("db")
-```
-
-### File I/O
-
-```hl
-tulisFile("file.txt", "content")
-content = bacaFile("file.txt")
-```
-
-### HTTP
-
-```hl
-resp = httpGet("url")
-resp = httpPost("url", {"key": "val"})
-```
-
-### Satire Functions
-
-```hl
-Mangkrak(1000)      // Delay + events
-Korupsi(25)         // Reduce budget 25%
-RapatInfinite()     // Infinite loop
-selesai()           // Terminate
-```
-
-### Built-in Variables
-
-```hl
-anggaran            // Budget (1000000000)
-status_proyek       // Project status
-progress            // Progress (0-100)
-```
-
-### Example Program
-
-```hl
-// Calculator
-fungsi kalkulator(a, b, op)
-    jika op == "+"
-        kembalikan a + b
-    ataujika op == "-"
-        kembalikan a - b
-    ataujika op == "*"
-        kembalikan a * b
-    ataujika op == "/"
-        kembalikan a / b
+fungsi pembuatPenambah(n)          // closure
+    fungsi tambah(x)
+        kembalikan x + n
     akhir
+    kembalikan tambah
 akhir
 
-hasil = kalkulator(10, 5, "+")
-lapor "Hasil: " + teks(hasil)
+BagiRata kali(a, b) { kembalikan a * b }   // gaya v5
+lapor Janji kali(6, 7)                     // 'Janji' = panggilan gaya v5
 
-// Loop
-untuk i dari 1 sampai 5
-    lapor "Angka: " + teks(i)
-akhir
-
-// Satire
-Korupsi(20)
-selesai()
+prosedur Laporan()                         // prosedur: assignment menembus ke luar
+    set total = total + 1
+akhirProsedur
+Laporan()
 ```
 
----
+Aturan scope:
 
-**Full documentation:** `docs/index.html`
+- **fungsi** — assignment membuat variabel lokal (seperti Python). Pakai `global x` untuk menulis global.
+- **prosedur** dan **`mulai … akhir`** — assignment memperbarui variabel luar yang sudah ada; variabel baru tetap lokal.
+- Blok `jika`/loop tidak membuat scope baru.
+- `hentikan`/`lanjut` di luar loop = error sintaks.
+
+## Error handling
+
+```hl
+coba
+    x = [1, 2][5]
+jikaGagal pesan                 // variabel pesan opsional
+    lapor "Gagal: " + pesan
+akhirCoba
+
+Mangkrak "Dana tidak cair"      // lempar ProyekMangkrak
+Mangkrak("Dana tidak cair")     // sama
+Mangkrak(2000)                  // ANGKA = tunda 2 detik + kemungkinan event
+pastikan(x > 0, "x harus positif")
+```
+
+Jenis error: `SalahKetik` (sintaks), `OperasiIlegal` (runtime), `ProyekMangkrak`
+(dilempar program), `NegaraBangkrut` (batas langkah — **tidak bisa** ditangkap).
+
+## Input / program formal
+
+```hl
+Tagih umur                       // input; teks yang berupa angka otomatis jadi angka
+Tagih nama, "Nama Anda: "
+
+Rapat                            // pembungkus program v5 (tanpa scope baru)
+    Wacana "komentar resmi"
+    Anggaran x = 1
+Bubarkan
+
+selesai                          // atau selesai(): akhiri program
+```
+
+## Standard library
+
+| Kategori | Fungsi |
+|----------|--------|
+| Konversi | `panjang` `tipe` `angka` `teks` `bulat` `bulatkan(x, digit)` `boolean` |
+| Matematika | `mutlak` `akar` `pangkat` `minimum` `maksimum` `jumlah` `rataRata` `acak()` `acak(n)` `acak(a, b)` `acakPilih` `rentang(n)` `rentang(a, b, langkah)` |
+| Daftar | `tambahArray`/`tambah` `hapusArray`/`hapus` `sisipkan` `ambilAkhir` `urutkan(x, turun)` `balik` `irisan(x, a, b)` `indeksDari` `berisi` `salin` |
+| Higher-order | `petakan(daftar, f)` `saring(daftar, f)` `lipat(daftar, f, awal)` |
+| Teks | `gabung(daftar, sep)` `pisah(teks, sep)` `besar` `kecil` `rapikan` `ganti` `mulaiDengan` `akhiriDengan` `ulangi` `rupiah` `kode` `karakter` |
+| Objek | `kunci` `nilai` `punya` |
+| JSON | `keJSON(x, indent)` `dariJSON(teks)` `bacaJSON(path)` `tulisJSON(path, x)` |
+| File* | `tulisFile` `tambahFile` `bacaFile` `adaFile` `hapusFile` |
+| Database* | `sambungDB(nama, "sqlite"/"mysql"/"postgres", target)` `queryDB(nama, sql, [params])` `tutupDB` |
+| HTTP* | `httpGet(url)` `httpPost(url, data)` → `{status, body, json}` |
+| Lain | `masukan(prompt)` `waktu()` `tanggal()` `pastikan(c, pesan)` |
+| Satire | `Korupsi(persen)` `Mangkrak(ms)` `selesai()` `RapatInfinite()` `Audit()` |
+
+\* diblokir di mode `--sandbox` / `--strict` / playground / CTF.
+
+`queryDB` mengembalikan daftar objek untuk `SELECT` (`rows[0].nama`) dan jumlah
+baris terdampak untuk perintah lain. Selalu pakai placeholder `?` + daftar
+parameter untuk input user:
+
+```hl
+queryDB("db", "SELECT * FROM proyek WHERE nama = ?", [nama_input])
+```

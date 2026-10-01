@@ -1,3 +1,6 @@
+# Core HambaLang tidak punya dependency. Paket di bawah ini opsional:
+#   httpGet/httpPost
 requests>=2.31.0
+#   sambungDB(..., "mysql"/"postgres") — sqlite sudah bawaan Python
 mysql-connector-python>=8.2.0
 psycopg2-binary>=2.9.9

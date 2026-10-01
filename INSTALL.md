@@ -1,141 +1,62 @@
-# HambaLang Installation Guide
+# Instalasi HambaLang
 
-## Requirements
+## Kebutuhan
 
-- Python 3.8 or higher
-- pip (Python package manager)
+- Python 3.9+
+- (opsional) Node.js 18+ untuk playground web
 
-## Basic Installation
-
-### 1. Clone Repository
+## Dari source
 
 ```bash
-git clone https://github.com/yourusername/hambalang.git
-cd hambalang
+git clone https://github.com/fk0u/HambaLang.git
+cd HambaLang
+pip install -e .              # core, tanpa dependency
+hambalang --version
+hambalang run examples/full_demo.hl --fast
 ```
 
-### 2. Run Basic Programs
-
-No additional dependencies needed for basic features:
+Tanpa install sama sekali:
 
 ```bash
-python interpreter/hamba_v2.py examples/full_demo.hl
+python -m hambalang run examples/full_demo.hl
+python cli/hambalang.py run examples/full_demo.hl      # perintah lama, masih didukung
 ```
 
-## Advanced Features Installation
+## Fitur opsional
 
-### Database Support
+| Extra | Untuk | Perintah |
+|-------|-------|----------|
+| `http` | `httpGet`, `httpPost` | `pip install -e ".[http]"` |
+| `db` | `sambungDB(..., "mysql" / "postgres")` | `pip install -e ".[db]"` |
+| `dev` | pytest, ruff | `pip install -e ".[dev]"` |
 
-**SQLite** (Built-in, no installation needed)
+SQLite sudah bawaan Python, tidak perlu install apa pun.
 
-**MySQL:**
-```bash
-pip install mysql-connector-python
-```
+Koneksi MySQL memakai string `"host=localhost user=root password=x database=db"`;
+PostgreSQL memakai DSN standar psycopg2.
 
-**PostgreSQL:**
-```bash
-pip install psycopg2-binary
-```
-
-### HTTP/API Support
+## Docker
 
 ```bash
-pip install requests
+docker build -t hambalang .
+docker run --rm hambalang                                    # demo
+docker run --rm -v "$PWD:/src" hambalang run /src/program.hl
+docker run --rm -it hambalang repl
 ```
 
-### All Dependencies
-
-Install everything at once:
-
-```bash
-pip install requests mysql-connector-python psycopg2-binary
-```
-
-## Web Playground Installation
-
-### Requirements
-- Node.js 18+ and npm
-
-### Steps
+## Playground web
 
 ```bash
 cd web
 npm install
-npm run dev
+npm run dev        # menyalin ../hambalang ke static/ lalu menjalankan Vite
+npm run build      # output statis di web/build (siap deploy Vercel/Netlify)
 ```
 
-Access at: `http://localhost:5173`
-
-### Build for Production
+## Verifikasi
 
 ```bash
-npm run build
+pip install -e ".[dev]"
+pytest
+hambalang check examples/*.hl ctf/*.hl
 ```
-
-## Verify Installation
-
-Run test script:
-
-```bash
-python interpreter/hamba_v2.py examples/full_demo.hl
-```
-
-Expected output:
-```
-🏗️  Menjalankan: examples/full_demo.hl
-==================================================
-=== HAMBALANG v2.0 - COMPLETE DEMO ===
-...
-✅ Eksekusi selesai
-```
-
-## Troubleshooting
-
-### Python Not Found
-- Install Python from [python.org](https://python.org)
-- Add Python to PATH
-
-### Module Not Found
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt  # if available
-```
-
-### Permission Denied
-Use virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-pip install <package>
-```
-
-## Platform-Specific Notes
-
-### Windows
-- Use PowerShell or CMD
-- Python command might be `py` instead of `python`
-
-### Linux/Mac
-- May need `python3` instead of `python`
-- May need `sudo` for system-wide installs
-
-### Docker (Coming Soon)
-```bash
-docker pull hambalang/interpreter
-docker run -v $(pwd):/code hambalang/interpreter your_script.hl
-```
-
-## Next Steps
-
-After installation:
-
-1. Read [README.md](../README.md) for overview
-2. Open [docs/index.html](../docs/index.html) for full documentation
-3. Try examples in [examples/](../examples/) directory
-4. Visit web playground
-
-## Support
-
-Issues? [Open an issue](https://github.com/yourusername/hambalang/issues)

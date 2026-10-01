@@ -1,18 +1,9 @@
-# Dockerfile for HambaLang Interpreter
-FROM python:3.11-slim
+# HambaLang — interpreter, compiler, HambaVM v4 (+ toolchain legacy v3)
+FROM python:3.12-slim
 
 WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[http,db]" && rm -rf web
 
-# Copy requirements
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy interpreter
-COPY interpreter/ ./interpreter/
-COPY examples/ ./examples/
-
-# Set entry point
-ENTRYPOINT ["python", "interpreter/hamba_v2.py"]
-
-# Default: run demo
-CMD ["examples/full_demo.hl"]
+ENTRYPOINT ["hambalang"]
+CMD ["run", "examples/full_demo.hl", "--fast"]

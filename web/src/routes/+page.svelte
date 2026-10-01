@@ -1,352 +1,216 @@
 <script>
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 
-	let code = `// HambaLang v2.0 Demo
+	const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/';
+
+	// Contoh program. Semua dijalankan oleh core HambaLang yang sama dengan CLI
+	// (paket Python `hambalang/`, disalin ke static/ oleh scripts/sync-core.mjs).
+	const EXAMPLES = {
+		demo: `// HambaLang — demo fitur inti
 lapor "=== MEGA PROYEK HAMBALANG ==="
 
-// Variables
 nama = "Hambalang"
 tahun = 2011
-lapor "Proyek: " + nama + " (" + teks(tahun) + ")"
+lapor "Proyek: " + nama + " (" + tahun + ")"
 
-// Arrays
 kontraktor = ["PT Adhi", "PT Waskita", "PT Wijaya"]
-lapor "Kontraktor: " + teks(panjang(kontraktor))
+lapor "Jumlah kontraktor: " + panjang(kontraktor)
 
-// Functions
 fungsi hitungPajak(nominal, persen)
-    hasil = nominal * persen / 100
-    kembalikan hasil
+    kembalikan nominal * persen / 100
 akhir
 
-anggaran_awal = 1000000000
-pajak = hitungPajak(anggaran_awal, 10)
-lapor "Pajak 10%: Rp " + teks(pajak)
+lapor "Pajak 10%: " + rupiah(hitungPajak(anggaran, 10))
 
-// Control Flow
 jika anggaran > 500000000
     lapor "✅ Dana mencukupi"
 atau
     lapor "⚠️ Dana kurang"
 akhir
 
-// Loops
-lapor "\\nProses approval:"
 untuk i dari 1 sampai 3
-    lapor "Tingkat " + teks(i) + " - Disetujui"
+    lapor "Tingkat " + i + " - Disetujui"
 akhir
 
-// Satire
 lapor "\\n[SATIRE] Simulasi Korupsi..."
 Korupsi(25)
 Mangkrak(1500)
+selesai()`,
+		algoritma: `// Rekursi, higher-order function, objek
+fungsi fib(n)
+    jika n < 2
+        kembalikan n
+    akhir
+    kembalikan fib(n - 1) + fib(n - 2)
+akhir
 
-selesai()`;
+lapor petakan(rentang(10), fib)
 
+fungsi mahal(p)
+    kembalikan p.anggaran > 1000000000
+akhir
+
+proyek = [
+    {nama: "Hambalang", anggaran: 2500000000},
+    {nama: "Pos Ronda", anggaran: 15000000},
+    {nama: "Tol Langit", anggaran: 9000000000}
+]
+
+untuk p dalam saring(proyek, mahal)
+    lapor p.nama + " -> " + rupiah(p.anggaran)
+akhir`,
+		error: `// Exception handling ala birokrasi
+fungsi cairkanDana(jumlah)
+    jika jumlah > anggaran
+        Mangkrak "Dana tidak cukup, proyek mangkrak"
+    akhir
+    anggaran -= jumlah
+    kembalikan anggaran
+akhir
+
+coba
+    lapor "Sisa: " + rupiah(cairkanDana(400000000))
+    lapor "Sisa: " + rupiah(cairkanDana(900000000))
+jikaGagal e
+    lapor "⚠️ Ditangkap: " + e
+akhirCoba
+
+coba
+    x = [1, 2, 3][10]
+jikaGagal e
+    lapor "⚠️ " + e
+akhirCoba`,
+		formal: `// Dialek formal v5 (sesuai docs/Grammar.ebnf)
+Rapat
+    Wacana "Kalkulator pelicin anggaran"
+    Anggaran dana = 1000
+    Anggaran putaran = 0
+
+    BagiRata potong(x) {
+        kembalikan x - x / 10
+    }
+
+    Proyek dana > 500 {
+        Anggaran dana = Janji potong(dana)
+        Anggaran putaran = putaran + 1
+    }
+
+    Sita putaran > 5 {
+        Korupsi "Butuh " + putaran + " rapat. Birokrasi sehat."
+    } Pengadilan {
+        Korupsi "Cepat sekali, pasti ada orang dalam."
+    }
+Bubarkan`
+	};
+
+	let selectedExample = 'demo';
+	let code = EXAMPLES.demo;
+	let engine = 'interpreter';
+	let seed = '';
 	let output = '';
 	let isRunning = false;
 	let pyodide = null;
 	let pyodideStatus = 'Loading...';
-	let selectedExample = 'demo';
 
-	const interpreterCode = `import sys
-import time
-import random
-import re
-from js import console
+	const GLUE = `
+import sys, js
+from hambalang import HambaError, Runtime, execute
 
-
-class HambaRuntime:
-    def __init__(self):
-        self.anggaran = 1_000_000_000
-        self.status_proyek = "Direncanakan"
-        self.progress = 0
-        self.output = []
-        self.terminated = False
-    
-    def log(self, message):
-        self.output.append(str(message))
-    
-    def get_output(self):
-        return "\\n".join(self.output)
-
-
-class HambaInterpreter:
-    def __init__(self, runtime=None):
-        self.runtime = runtime or HambaRuntime()
-        self.in_rapat_infinite = False
-    
-    def execute(self, code):
-        lines = code.strip().split('\\n')
-        
-        for line_num, line in enumerate(lines, 1):
-            if self.runtime.terminated:
-                break
-            
-            line = line.strip()
-            
-            if not line or line.startswith('//'):
-                continue
-            
-            try:
-                self._execute_line(line)
-            except Exception as e:
-                error_msg = f"Error Birokrasi pada baris {line_num}: {str(e)}"
-                self.runtime.log(error_msg)
-                raise Exception(error_msg)
-    
-    def _execute_line(self, line):
-        if line.startswith('lapor '):
-            content = line[6:].strip()
-            message = self._eval_expression(content)
-            self.runtime.log(message)
-            return
-        
-        if line.startswith('print '):
-            content = line[6:].strip()
-            message = self._eval_expression(content)
-            self.runtime.log(message)
-            return
-        
-        match = re.match(r'Mangkrak\\((\\d+)\\)', line)
-        if match:
-            ms = int(match.group(1))
-            self._mangkrak(ms)
-            return
-        
-        match = re.match(r'Korupsi\\((\\d+)\\)', line)
-        if match:
-            percent = int(match.group(1))
-            self._korupsi(percent)
-            return
-        
-        if line == 'RapatInfinite()':
-            self._rapat_infinite()
-            return
-        
-        if line == 'selesai()':
-            self._selesai()
-            return
-        
-        if line.startswith('jika '):
-            self._execute_conditional(line)
-            return
-        
-        if '=' in line and not any(op in line for op in ['>', '<', '==']):
-            self._assign_variable(line)
-            return
-        
-        raise Exception(f"Syntax tidak dikenali: {line}")
-    
-    def _eval_expression(self, expr):
-        expr = expr.strip()
-        
-        if (expr.startswith('"') and expr.endswith('"')) or (expr.startswith("'") and expr.endswith("'")):
-            return expr[1:-1]
-        
-        if expr == 'anggaran':
-            return f"Rp {self.runtime.anggaran:,.0f}"
-        
-        if expr == 'status_proyek':
-            return self.runtime.status_proyek
-        
-        if expr == 'progress':
-            return f"{self.runtime.progress}%"
-        
-        try:
-            return str(eval(expr))
-        except:
-            return expr
-    
-    def _mangkrak(self, ms):
-        seconds = ms / 1000
-        self.runtime.log(f"⏳ Proyek mangkrak selama {seconds} detik...")
-        
-        events = [
-            "💸 Dana habis untuk operasional!",
-            "🏃 Vendor kabur dengan uang muka!",
-            "🌧️ Longsor menghancurkan pondasi!",
-            "🚨 Audit mendadak dari KPK!",
-            "📄 Dokumen perizinan bermasalah!",
-            "👷 Pekerja mogok kerja!",
-        ]
-        
-        if random.random() < 0.3:
-            event = random.choice(events)
-            self.runtime.log(f"🚧 EVENT: {event}")
-            self.runtime.anggaran -= random.randint(10_000_000, 100_000_000)
-            if self.runtime.anggaran < 0:
-                self.runtime.anggaran = 0
-    
-    def _korupsi(self, percent):
-        if percent < 0 or percent > 100:
-            raise Exception("Persentase korupsi harus 0-100")
-        
-        actual_percent = random.uniform(percent * 0.8, percent * 1.2)
-        amount = self.runtime.anggaran * (actual_percent / 100)
-        self.runtime.anggaran -= amount
-        
-        if self.runtime.anggaran < 0:
-            self.runtime.anggaran = 0
-        
-        self.runtime.log(f"💰 Korupsi {actual_percent:.1f}%: Rp {amount:,.0f} menguap!")
-        self.runtime.log(f"📊 Sisa anggaran: Rp {self.runtime.anggaran:,.0f}")
-    
-    def _rapat_infinite(self):
-        self.runtime.log("🔄 Memulai RapatInfinite()...")
-        self.runtime.log("⚠️ Program terjebak dalam rapat berkepanjangan!")
-        
-        for i in range(5):
-            self.runtime.log(f"📋 Rapat sesi ke-{i+1}: Belum ada keputusan...")
-        
-        self.runtime.log("⏸️ (RapatInfinite dihentikan paksa untuk demo)")
-    
-    def _selesai(self):
-        self.runtime.status_proyek = "Selesai (di atas kertas)"
-        self.runtime.progress = 100
-        
-        bar = "█" * 9 + "░"
-        self.runtime.log(f"\\n✅ PROYEK SELESAI!")
-        self.runtime.log(f"Progress: 100% [{bar}]")
-        self.runtime.log(f"Status: {self.runtime.status_proyek}")
-        self.runtime.log(f"Sisa Anggaran: Rp {self.runtime.anggaran:,.0f}")
-        self.runtime.log(f"(Kondisi fisik: Data tidak tersedia)")
-        
-        self.runtime.terminated = True
-    
-    def _execute_conditional(self, line):
-        match = re.match(r'jika\\s+(.+?)\\s+maka\\s+(.+)', line)
-        if not match:
-            raise Exception("Format: jika <kondisi> maka <aksi>")
-        
-        condition = match.group(1).strip()
-        action = match.group(2).strip()
-        
-        condition_eval = condition.replace('anggaran', str(self.runtime.anggaran))
-        
-        try:
-            result = eval(condition_eval)
-        except:
-            raise Exception(f"Kondisi tidak valid: {condition}")
-        
-        if result:
-            self._execute_line(action)
-    
-    def _assign_variable(self, line):
-        parts = line.split('=', 1)
-        if len(parts) != 2:
-            raise Exception(f"Assignment tidak valid: {line}")
-        
-        var_name = parts[0].strip()
-        value = parts[1].strip()
-        
-        if var_name == 'anggaran':
-            try:
-                self.runtime.anggaran = float(eval(value))
-            except:
-                raise Exception(f"Nilai anggaran tidak valid: {value}")
-        elif var_name == 'status_proyek':
-            self.runtime.status_proyek = self._eval_expression(value)
-        elif var_name == 'progress':
-            try:
-                self.runtime.progress = int(eval(value))
-            except:
-                raise Exception(f"Nilai progress tidak valid: {value}")
-        else:
-            raise Exception(f"Variable tidak dikenal: {var_name}")
-
-
-def run_hambalang(code):
-    runtime = HambaRuntime()
-    interpreter = HambaInterpreter(runtime)
-    
+def run_hambalang(code, engine, seed):
+    out = []
+    rt = Runtime(
+        seed=None if seed == "" else int(seed),
+        sandbox=True,
+        step_limit=200_000,
+        output=out.append,
+        input_fn=lambda prompt: (js.prompt(prompt) or ""),
+    )
+    status = "ok"
     try:
-        interpreter.execute(code)
-        return runtime.get_output()
-    except Exception as e:
-        return runtime.get_output() + "\\n\\n" + str(e)
+        execute(code, rt, engine)
+    except HambaError as e:
+        status = "error"
+        out.append("")
+        out.append(f"❌ {e.jenis}" + (f" (baris {e.line})" if e.line else "") + f": {e.message}")
+    out.append("")
+    out.append(f"— {rt.steps:,} langkah · anggaran akhir Rp {rt.state['anggaran']:,} —".replace(",", "."))
+    return status + "\\n" + "\\n".join(out)
 `;
 
 	onMount(async () => {
 		try {
 			pyodideStatus = 'Loading Pyodide...';
-			const pyodideModule = await import('pyodide');
-			pyodide = await pyodideModule.loadPyodide({
-				indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'
-			});
+			const pyodideModule = await import(/* @vite-ignore */ `${PYODIDE_URL}pyodide.mjs`);
+			pyodide = await pyodideModule.loadPyodide({ indexURL: PYODIDE_URL });
 
-			await pyodide.runPythonAsync(interpreterCode);
-			pyodideStatus = 'Ready';
+			pyodideStatus = 'Loading HambaLang core...';
+			const manifest = await (await fetch(`${base}/hambalang/manifest.json`)).json();
+			pyodide.FS.mkdirTree('/lib/hambalang');
+			for (const file of manifest.files) {
+				const src = await (await fetch(`${base}/hambalang/${file}`)).text();
+				pyodide.FS.writeFile(`/lib/hambalang/${file}`, src);
+			}
+			await pyodide.runPythonAsync(`import sys\nsys.path.insert(0, "/lib")\n${GLUE}`);
+			pyodideStatus = `Ready (HambaLang ${manifest.version})`;
 		} catch (error) {
-			pyodideStatus = 'Error loading Pyodide';
+			pyodideStatus = 'Error loading runtime';
 			output = `❌ Error: ${error.message}`;
 		}
 	});
 
 	async function runCode() {
-		if (!pyodide || pyodideStatus !== 'Ready') {
-			output = '⚠️ Pyodide belum siap. Tunggu sebentar...';
+		if (!pyodide || !pyodideStatus.startsWith('Ready')) {
+			output = '⚠️ Runtime belum siap. Tunggu sebentar...';
+			return;
+		}
+		if (seed !== '' && !/^-?\d+$/.test(seed)) {
+			output = '⚠️ Seed harus bilangan bulat (atau kosong untuk acak).';
 			return;
 		}
 
 		isRunning = true;
-		output = '🏗️ Menjalankan HambaLang...\n' + '='.repeat(50) + '\n\n';
+		const label = engine === 'vm' ? 'HambaVM v4 (bytecode)' : 'Interpreter';
+		output = `🏗️ Menjalankan dengan ${label}...\n${'='.repeat(50)}\n\n`;
 
 		try {
-			const result = await pyodide.runPythonAsync(`run_hambalang(${JSON.stringify(code)})`);
-			output += result;
-			output += '\n\n' + '='.repeat(50);
-			output += '\n✅ Eksekusi selesai';
+			pyodide.globals.set('_code', code);
+			pyodide.globals.set('_engine', engine);
+			pyodide.globals.set('_seed', seed);
+			const result = await pyodide.runPythonAsync('run_hambalang(_code, _engine, _seed)');
+			const [status, ...rest] = result.split('\n');
+			output += rest.join('\n');
+			if (status === 'ok') output += '\n✅ Eksekusi selesai';
 		} catch (error) {
-			output += `\n\n❌ Error: ${error.message}`;
+			output += `\n\n❌ Error internal: ${error.message}`;
 		} finally {
 			isRunning = false;
 		}
 	}
 
 	function loadExample() {
-		code = `// HambaLang Demo - Satir Proyek Hambalang
-lapor "=== MEGA PROYEK HAMBALANG ==="
-lapor "Wisma Atlet Kelas Dunia"
+		code = EXAMPLES[selectedExample];
+	}
 
-lapor "Budget awal:"
-print anggaran
-
-lapor "[FASE 1] Perencanaan"
-Mangkrak(2000)
-
-lapor "[FASE 2] Tender & Pengadaan"
-Korupsi(20)
-
-jika anggaran > 500000000 maka lapor "✅ Anggaran mencukupi, lanjut!"
-
-lapor "[FASE 3] Pelaksanaan"
-Korupsi(25)
-Mangkrak(3000)
-
-lapor "[FASE 4] Finishing"
-Korupsi(15)
-
-lapor "Anggaran tersisa:"
-print anggaran
-
-jika anggaran < 100000000 maka lapor "⚠️ WARNING: Dana kritis!"
-
-selesai()`;
+	function handleKeydown(event) {
+		if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+			event.preventDefault();
+			runCode();
+		}
 	}
 </script>
 
 <svelte:head>
-	<title>HambaLang - Esoteric Programming Language</title>
+	<title>HambaLang Playground</title>
 	<meta name="description" content="Satir Proyek Hambalang dalam bentuk bahasa pemrograman" />
 </svelte:head>
 
 <main>
 	<header>
 		<h1>🏗️ HambaLang</h1>
-		<p class="subtitle">Esoteric Programming Language - Satir Proyek Hambalang</p>
+		<p class="subtitle">Bahasa pemrograman satir birokrasi — interpreter &amp; bytecode VM di browser</p>
 		<div class="status">
-			Status: <span class:ready={pyodideStatus === 'Ready'}>{pyodideStatus}</span>
+			Status: <span class:ready={pyodideStatus.startsWith('Ready')}>{pyodideStatus}</span>
 		</div>
 	</header>
 
@@ -355,20 +219,30 @@ selesai()`;
 			<div class="editor-header">
 				<h2>Editor (.hl)</h2>
 				<div class="buttons">
-					<button on:click={loadExample} disabled={isRunning}>📝 Load Example</button>
-					<button on:click={runCode} disabled={isRunning || pyodideStatus !== 'Ready'} class="run-btn">
+					<select bind:value={selectedExample} on:change={loadExample} disabled={isRunning} aria-label="Contoh program">
+						<option value="demo">Demo</option>
+						<option value="algoritma">Algoritma</option>
+						<option value="error">Error handling</option>
+						<option value="formal">Dialek formal v5</option>
+					</select>
+					<select bind:value={engine} disabled={isRunning} aria-label="Engine">
+						<option value="interpreter">Interpreter</option>
+						<option value="vm">HambaVM v4</option>
+					</select>
+					<input class="seed" bind:value={seed} placeholder="seed" aria-label="Seed RNG" disabled={isRunning} />
+					<button on:click={runCode} disabled={isRunning || !pyodideStatus.startsWith('Ready')} class="run-btn">
 						{isRunning ? '⏳ Running...' : '▶️ Run'}
 					</button>
 				</div>
 			</div>
-			<textarea bind:value={code} spellcheck="false" disabled={isRunning}></textarea>
+			<textarea bind:value={code} on:keydown={handleKeydown} spellcheck="false" disabled={isRunning}></textarea>
 		</section>
 
 		<section class="output-section">
 			<div class="output-header">
 				<h2>Console Output</h2>
 			</div>
-			<pre class="output">{output || '// Output akan muncul di sini...'}</pre>
+			<pre class="output">{output || '// Output akan muncul di sini... (Ctrl+Enter untuk run)'}</pre>
 		</section>
 	</div>
 
@@ -376,12 +250,14 @@ selesai()`;
 		<div class="syntax-guide">
 			<h3>Syntax Reference</h3>
 			<ul>
-				<li><code>lapor "pesan"</code> - Print message</li>
-				<li><code>Mangkrak(ms)</code> - Delay dengan random event</li>
-				<li><code>Korupsi(percent)</code> - Kurangi anggaran</li>
-				<li><code>jika kondisi maka aksi</code> - Conditional</li>
-				<li><code>selesai()</code> - End program</li>
-				<li><code>RapatInfinite()</code> - Infinite loop</li>
+				<li><code>lapor ekspresi</code> — cetak nilai</li>
+				<li><code>x = 1</code> / <code>set x = 1</code> / <code>Anggaran x = 1</code> — assignment</li>
+				<li><code>jika .. ataujika .. atau .. akhir</code> — percabangan</li>
+				<li><code>untuk i dari 1 sampai 10</code>, <code>untuk x dalam daftar</code>, <code>selama</code> — loop</li>
+				<li><code>fungsi f(a) .. kembalikan .. akhir</code> — fungsi &amp; closure</li>
+				<li><code>coba .. jikaGagal e .. akhirCoba</code> — tangkap error</li>
+				<li><code>Korupsi(persen)</code>, <code>Mangkrak(ms)</code>, <code>selesai()</code> — satire</li>
+				<li>Mode sandbox: akses file/DB/HTTP dimatikan di browser</li>
 			</ul>
 		</div>
 	</footer>
@@ -491,6 +367,18 @@ selesai()`;
 	button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	select,
+	.seed {
+		padding: 0.5rem;
+		border-radius: 6px;
+		border: 1px solid #ccc;
+		font-size: 0.9rem;
+	}
+
+	.seed {
+		width: 4.5rem;
 	}
 
 	.run-btn {

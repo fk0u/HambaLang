@@ -1,71 +1,117 @@
-program         ::= "Rapat" statement_list "Bubarkan"
+(* ======================================================================
+   HambaLang v6 — Grammar terpadu
+   Diimplementasikan oleh hambalang/parser.py. Semua dialek historis
+   (v2 klasik, advanced v3, formal v5) diterima oleh grammar yang sama.
 
-statement_list  ::= statement*
+   Konvensi:
+     NL        = newline atau ';'  (newline di dalam ( ) dan [ ] diabaikan)
+     "kata"    = kata kunci
+     ADJ "("   = '(' yang menempel tanpa spasi pada token sebelumnya
+   ====================================================================== *)
 
-statement       ::= var_declaration
-                  | assignment
-                  | print_stmt
-                  | io_stmt
-                  | error_stmt
-                  | if_stmt
-                  | while_stmt
-                  | proc_def
-                  | function_call
-                  | comment_stmt
-                  | ";"
+program         = { NL } , { statement } ;
 
-var_declaration ::= "Anggaran" identifier "=" expression
+block(end)      = { statement } ;                 (* berhenti SEBELUM kata kunci `end`;
+                                                     terminator ditulis eksplisit oleh tiap rule *)
+brace_block     = { NL } , "{" , { statement } , "}" ;
 
-assignment      ::= identifier "=" expression
+statement       = { NL } , ( simple_stmt | compound_stmt ) ;
 
-print_stmt      ::= "Korupsi" expression
+(* ---------------------------------------------------------- simple *)
 
-io_stmt         ::= "Tagih" identifier
+simple_stmt     = ( print_stmt | assign_stmt | expr_stmt | return_stmt
+                  | "hentikan" | "lanjut" | raise_stmt | input_stmt
+                  | global_stmt | wacana_stmt | "selesai" ) , NL ;
 
-error_stmt      ::= "Mangkrak" expression?
+print_stmt      = ( "lapor" | "print" ) , [ expression ]
+                | "Korupsi" , expression ;       (* dialek v5: tanpa '(' menempel *)
 
-if_stmt         ::= "Sita" expression "{" statement_list "}" 
-                    ( "Pengadilan" "{" statement_list "}" )?
+assign_stmt     = [ "set" | "Anggaran" ] , target , assign_op , expression ;
+assign_op       = "=" | "+=" | "-=" | "*=" | "/=" | "%=" ;
+target          = IDENT , { "[" , expression , "]" | "." , IDENT } ;
 
-while_stmt      ::= "Proyek" expression "{" statement_list "}"
+expr_stmt       = expression ;                   (* mis. Korupsi(20), f(x) *)
+return_stmt     = "kembalikan" , [ expression ] ;
+raise_stmt      = "Mangkrak" , [ expression ] ;  (* tanpa '(' menempel *)
+input_stmt      = "Tagih" , IDENT , [ "," , expression ] ;
+global_stmt     = "global" , IDENT , { "," , IDENT } ;
+wacana_stmt     = "Wacana" , [ expression ] ;    (* komentar resmi, tidak dieksekusi *)
 
-proc_def        ::= "BagiRata" identifier "(" param_list? ")" "{" statement_list "}"
-param_list      ::= identifier ("," identifier)*
+(* --------------------------------------------------------- compound *)
 
-function_call   ::= "Janji" identifier "(" arg_list? ")"
-arg_list        ::= expression ("," expression)*
+compound_stmt   = if_stmt | sita_stmt | while_stmt | proyek_stmt | for_stmt
+                | repeat_stmt | program_block | func_def | bagirata_def
+                | proc_def | scope_block | try_stmt ;
 
-comment_stmt    ::= "Wacana" string_literal
+if_stmt         = "jika" , expression , "maka" , simple_stmt          (* inline *)
+                | "jika" , expression , [ "maka" ] , NL ,
+                  block( "ataujika" | "atau" | "akhir" ) ,
+                  { ( "ataujika" | "atau" "jika" ) , expression , [ "maka" ] , NL ,
+                    block( "ataujika" | "atau" | "akhir" ) } ,
+                  [ "atau" , NL , block( "akhir" ) ] ,
+                  "akhir" , NL ;
 
-/* Expressions */
+sita_stmt       = "Sita" , expression , brace_block ,
+                  { "Pengadilan" , "Sita" , expression , brace_block } ,
+                  [ "Pengadilan" , brace_block ] , NL ;
 
-expression      ::= logical_or_expr
+while_stmt      = "selama" , expression , NL , block( "akhir" ) , "akhir" , NL ;
+proyek_stmt     = "Proyek" , expression , brace_block , NL ;
 
-logical_or_expr ::= logical_and_expr ( "ATAU" logical_and_expr )*
+for_stmt        = "untuk" , IDENT ,
+                  ( "dari" , expression , "sampai" , expression , [ "langkah" , expression ]
+                  | "dalam" , expression ) ,
+                  NL , block( "akhir" ) , "akhir" , NL ;
 
-logical_and_expr ::= equality_expr ( "DAN" equality_expr )*
+repeat_stmt     = "Rapat" , ADJ "(" , expression , ")" , NL ,
+                  block( "selesaiRapat" | "akhir" ) , ( "selesaiRapat" | "akhir" ) , NL ;
+program_block   = "Rapat" , NL , block( "Bubarkan" ) , "Bubarkan" , NL ;
 
-equality_expr   ::= relational_expr ( ( "==" | "!=" ) relational_expr )*
+params          = "(" , [ IDENT , { "," , IDENT } ] , ")" ;
+func_def        = "fungsi" , IDENT , params , NL , block( "akhir" ) , "akhir" , NL ;
+bagirata_def    = "BagiRata" , IDENT , params , brace_block , NL ;
+proc_def        = "prosedur" , IDENT , [ params ] , NL ,
+                  block( "akhirProsedur" | "akhir" ) , ( "akhirProsedur" | "akhir" ) , NL ;
 
-relational_expr ::= additive_expr ( ( "<" | ">" | "<=" | ">=" ) additive_expr )*
+scope_block     = "mulai" , NL , block( "akhir" ) , "akhir" , NL ;
 
-additive_expr   ::= multiplicative_expr ( ( "+" | "-" ) multiplicative_expr )*
+try_stmt        = "coba" , NL , block( "jikaGagal" ) ,
+                  "jikaGagal" , [ IDENT ] , NL ,
+                  block( "akhirCoba" | "akhir" ) , ( "akhirCoba" | "akhir" ) , NL ;
 
-multiplicative_expr ::= unary_expr ( ( "*" | "/" | "%" ) unary_expr )*
+(* ------------------------------------------------------ expressions *)
+(* Dari prioritas terendah ke tertinggi. *)
 
-unary_expr      ::= ( "-" | "!" ) unary_expr
-                  | primary_expr
+expression      = or_expr ;
+or_expr         = and_expr , { ( "atau" | "ATAU" ) , and_expr } ;
+and_expr        = not_expr , { ( "dan" | "DAN" ) , not_expr } ;
+not_expr        = ( "bukan" | "BUKAN" ) , not_expr | comparison ;
+comparison      = additive , { ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) , additive } ;
+additive        = multiplicative , { ( "+" | "-" ) , multiplicative } ;
+multiplicative  = unary , { ( "*" | "/" | "%" ) , unary } ;
+unary           = ( "-" | "+" | "!" ) , unary | power ;
+power           = postfix , [ "**" , unary ] ;            (* asosiatif kanan *)
+postfix         = primary , { "(" , [ args ] , ")" | "[" , expression , "]" | "." , IDENT } ;
+args            = expression , { "," , expression } , [ "," ] ;
 
-primary_expr    ::= identifier
-                  | literal
-                  | "(" expression ")"
-                  | function_call
+primary         = NUMBER | STRING
+                | "benar" | "BENAR" | "salah" | "SALAH" | "kosong" | "KOSONG"
+                | IDENT
+                | "Janji" , IDENT                          (* harus diikuti '(' *)
+                | "(" , expression , ")"
+                | "[" , [ args ] , "]"
+                | "{" , [ pair , { "," , pair } , [ "," ] ] , "}" ;
+pair            = ( IDENT | expression ) , ":" , expression ;
 
-/* Terminals */
+(* ---------------------------------------------------------- lexical *)
 
-identifier      ::= [a-zA-Z_] [a-zA-Z0-9_]*
-literal         ::= integer_literal | string_literal | float_literal | boolean_literal
-integer_literal ::= [0-9]+
-float_literal   ::= [0-9]+ "." [0-9]+
-string_literal  ::= '"' [^"]* '"'
-boolean_literal ::= "BENAR" | "SALAH"
+IDENT           = ( letter | "_" ) , { letter | digit | "_" } ;   (* bukan kata kunci, bukan
+                                                                    Korupsi/Mangkrak/Rapat/selesai *)
+letter          = "A" … "Z" | "a" … "z" ;                         (* ASCII saja *)
+digit           = "0" … "9" ;
+NUMBER          = ( digit , { digit | "_" } , [ "." , digit , { digit | "_" } ]
+                  | "." , digit , { digit | "_" } ) ,                       (* .5 juga sah *)
+                  [ ( "e" | "E" ) , [ "+" | "-" ] , digit , { digit } ] ;
+STRING          = '"' , { char | escape } , '"' | "'" , { char | escape } , "'" ;
+escape          = "\" , ( "n" | "t" | "r" | "0" | "\" | '"' | "'" ) ;   (* escape lain = SalahKetik *)
+comment         = "//" , { any } | "#" , { any } | "/*" , { any } , "*/" ;

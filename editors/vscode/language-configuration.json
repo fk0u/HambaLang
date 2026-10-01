@@ -1,0 +1,83 @@
+{
+  "comments": {
+    "lineComment": "//",
+    "blockComment": [
+      "/*",
+      "*/"
+    ]
+  },
+  "brackets": [
+    [
+      "{",
+      "}"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ]
+  ],
+  "autoClosingPairs": [
+    {
+      "open": "{",
+      "close": "}"
+    },
+    {
+      "open": "[",
+      "close": "]"
+    },
+    {
+      "open": "(",
+      "close": ")"
+    },
+    {
+      "open": "\"",
+      "close": "\"",
+      "notIn": [
+        "string"
+      ]
+    },
+    {
+      "open": "'",
+      "close": "'",
+      "notIn": [
+        "string"
+      ]
+    }
+  ],
+  "surroundingPairs": [
+    [
+      "{",
+      "}"
+    ],
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ],
+    [
+      "\"",
+      "\""
+    ],
+    [
+      "'",
+      "'"
+    ]
+  ],
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(jika|ataujika|atau|selama|untuk|fungsi|prosedur|mulai|coba|jikaGagal|Rapat(\\(.*\\))?)\\b(?!.*\\bmaka\\s+\\S).*$|.*\\{\\s*$",
+    "decreaseIndentPattern": "^\\s*(akhir|ataujika|atau|jikaGagal|akhirCoba|akhirProsedur|selesaiRapat|Bubarkan)\\b|^\\s*\\}"
+  },
+  "folding": {
+    "markers": {
+      "start": "^\\s*(jika|selama|untuk|fungsi|prosedur|mulai|coba|Rapat)\\b(?!.*\\bmaka\\s+\\S)",
+      "end": "^\\s*(akhir|akhirCoba|akhirProsedur|selesaiRapat|Bubarkan)\\b"
+    }
+  }
+}

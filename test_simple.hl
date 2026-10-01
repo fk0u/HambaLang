@@ -1,5 +1,0 @@
-arr = ["A", "B"]
-lapor "Awal: " + teks(panjang(arr))
-tambahArray(arr, "C")
-lapor "Akhir: " + teks(panjang(arr))
-selesai

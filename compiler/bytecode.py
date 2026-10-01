@@ -215,46 +215,93 @@ class BytecodeCompiler:
             self.code[jif_pos + 2] = (len(self.code) >> 8) & 0xFF
     
     def _compile_expr(self, expr: str):
-        """Compile expression to bytecode"""
-        expr = expr.strip()
-        
-        # String literal
-        if (expr.startswith('"') and expr.endswith('"')) or (expr.startswith("'") and expr.endswith("'")):
-            str_val = expr[1:-1]
-            str_id = self._add_string(str_val)
-            self.emit(OP_PUSH, str_id | 0x8000)
-            return
-        
-        # Number literal
-        try:
-            if '.' in expr:
-                val = float(expr)
-                const_id = self._add_constant(val)
-                self.emit(OP_PUSH, const_id)
-                return
+        """Compile expression to bytecode.
+
+        Ekspresi diparse dengan parser HambaLang v6 (precedence & asosiativitas
+        benar), lalu diturunkan ke opcode v3 yang terbatas.
+        """
+        from hambalang.lexer import tokenize
+        from hambalang.parser import Parser
+        parser = Parser(tokenize(expr.strip()))
+        node = parser.parse_expression()
+        self._emit_expr(node)
+
+    def _emit_expr(self, node):
+        from hambalang import nodes as N
+        simple = {'+': OP_ADD, '-': OP_SUB, '*': OP_MUL, '/': OP_DIV, '%': OP_MOD,
+                  '==': OP_EQ, '<': OP_LT, '>': OP_GT}
+        # Operator tanpa opcode sendiri: hitung kebalikannya lalu bandingkan dengan 0.
+        negated = {'!=': OP_EQ, '>=': OP_LT, '<=': OP_GT}
+        if isinstance(node, N.Literal):
+            val = node.value
+            if isinstance(val, str):
+                self.emit(OP_PUSH, self._add_string(val) | 0x8000)
+            elif isinstance(val, bool) or val is None:
+                self.emit(OP_PUSH, self._add_constant(1 if val else 0))
             else:
-                val = int(expr)
-                const_id = self._add_constant(val)
-                self.emit(OP_PUSH, const_id)
-                return
-        except ValueError:
-            pass
-        
-        # Variable
-        if expr.isalpha() or '_' in expr:
-            var_id = self._get_var_id(expr)
-            self.emit(OP_LOAD, var_id)
-            return
-        
-        # Binary operations
-        for op_str, opcode in [('+', OP_ADD), ('-', OP_SUB), ('*', OP_MUL), ('/', OP_DIV), ('==', OP_EQ), ('<', OP_LT), ('>', OP_GT)]:
-            if op_str in expr:
-                parts = expr.split(op_str, 1)
-                self._compile_expr(parts[0])
-                self._compile_expr(parts[1])
-                self.emit(opcode)
-                return
-    
+                self.emit(OP_PUSH, self._add_constant(val))
+        elif isinstance(node, N.Name):
+            self.emit(OP_LOAD, self._get_var_id(node.name))
+        elif isinstance(node, N.Binary) and node.op in simple:
+            self._emit_expr(node.left)
+            self._emit_expr(node.right)
+            self.emit(simple[node.op])
+        elif isinstance(node, N.Binary) and node.op in negated:
+            self._emit_expr(node.left)
+            self._emit_expr(node.right)
+            self.emit(negated[node.op])
+            self.emit(OP_PUSH, self._add_constant(0))
+            self.emit(OP_EQ)
+        elif isinstance(node, N.Unary) and node.op == '-':
+            self.emit(OP_PUSH, self._add_constant(0))
+            self._emit_expr(node.operand)
+            self.emit(OP_SUB)
+        elif isinstance(node, N.Unary) and node.op == 'bukan':
+            self._emit_expr(node.operand)
+            self.emit(OP_PUSH, self._add_constant(0))
+            self.emit(OP_EQ)
+        elif isinstance(node, N.Logical):
+            # Short-circuit dengan lompatan. Format v3 tidak punya DUP, jadi
+            # hasilnya boolean 1/0 (sama seperti hasil perbandingan di VM v3),
+            # bukan nilai operandnya.
+            false_jumps, true_jumps = [], []
+            self._emit_expr(node.left)
+            if node.op == 'dan':
+                false_jumps.append(self._emit_jif())
+            else:
+                skip = self._emit_jif()
+                true_jumps.append(self._emit_jump())
+                self._patch(skip)
+            self._emit_expr(node.right)
+            false_jumps.append(self._emit_jif())
+            for j in true_jumps:
+                self._patch(j)
+            self.emit(OP_PUSH, self._add_constant(1))
+            end = self._emit_jump()
+            for j in false_jumps:
+                self._patch(j)
+            self.emit(OP_PUSH, self._add_constant(0))
+            self._patch(end)
+        else:
+            raise ValueError(
+                f"Ekspresi '{type(node).__name__}' tidak didukung compiler legacy v3; "
+                "gunakan 'hambalang compile' (HBC v4)")
+
+    def _emit_jif(self) -> int:
+        pos = len(self.code)
+        self.emit(OP_JUMP_IF_FALSE, 0)
+        return pos
+
+    def _emit_jump(self) -> int:
+        pos = len(self.code)
+        self.emit(OP_JUMP, 0)
+        return pos
+
+    def _patch(self, pos: int):
+        target = len(self.code)
+        self.code[pos + 1] = target & 0xFF
+        self.code[pos + 2] = (target >> 8) & 0xFF
+
     def emit(self, opcode: int, operand: int = 0):
         """Emit bytecode instruction"""
         self.code.append(opcode)

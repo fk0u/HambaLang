@@ -22,8 +22,11 @@ Gunakan CLI HambaLang untuk menjalankan challenge.
 
 **Jalankan Challenge:**
 ```bash
-python cli/hambalang.py ctf ctf/challenge_easy.hl
+hambalang ctf ctf/challenge_easy.hl
+# atau tanpa install: python -m hambalang ctf ctf/challenge_easy.hl
 ```
+
+Challenge berjalan di sandbox (tanpa akses file/DB/HTTP).
 
 **Input Data:**
 Beberapa challenge membutuhkan input interaktif (`Tagih`). Masukkan angka/data yang diminta.

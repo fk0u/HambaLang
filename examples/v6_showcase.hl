@@ -1,0 +1,99 @@
+// ==========================================================
+// HambaLang v6 — Showcase "Sistem Informasi Proyek Strategis"
+// Jalankan: hambalang run examples/v6_showcase.hl --seed 2026
+//           hambalang run examples/v6_showcase.hl --vm --seed 2026
+// ==========================================================
+
+lapor "=== SIPS: Sistem Informasi Proyek Strategis ==="
+
+// ---------- Data: daftar objek, akses .properti
+proyek = [
+    {nama: "Wisma Atlet", lokasi: "Bogor", pagu: 2500000000, realisasi: 1200000000},
+    {nama: "Jembatan Gantung", lokasi: "Kutai", pagu: 800000000, realisasi: 790000000},
+    {nama: "Bandara Perintis", lokasi: "Samarinda", pagu: 5000000000, realisasi: 1500000000},
+    {nama: "Pos Ronda Digital", lokasi: "Jakarta", pagu: 15000000, realisasi: 15000000}
+]
+
+// ---------- Fungsi first-class & closure
+fungsi persenSerapan(p)
+    kembalikan bulatkan(p.realisasi / p.pagu * 100, 1)
+akhir
+
+fungsi pembuatFilter(batas)
+    fungsi lolos(p)
+        kembalikan persenSerapan(p) < batas
+    akhir
+    kembalikan lolos
+akhir
+
+fungsi totalPagu(acc, p)
+    kembalikan acc + p.pagu
+akhir
+
+lapor "\n[1] Ringkasan"
+lapor "Jumlah proyek : " + panjang(proyek)
+lapor "Total pagu    : " + rupiah(lipat(proyek, totalPagu, 0))
+lapor "Serapan (%)   : " + petakan(proyek, persenSerapan)
+
+lapor "\n[2] Proyek dengan serapan < 50% (closure pembuatFilter(50))"
+untuk p dalam saring(proyek, pembuatFilter(50))
+    lapor "  - " + p.nama + " (" + p.lokasi + "): " + persenSerapan(p) + "%"
+akhir
+
+// ---------- Kontrol alur: untuk..langkah, lanjut, hentikan, compound assignment
+lapor "\n[3] Jadwal termin pembayaran"
+termin = 0
+untuk bulan dari 1 sampai 12 langkah 3
+    termin += 1
+    jika bulan == 7
+        lapor "  Bulan " + bulan + ": libur anggaran (lanjut)"
+        lanjut
+    akhir
+    lapor "  Bulan " + bulan + ": termin ke-" + termin
+akhir
+
+// ---------- Error handling: Mangkrak, pastikan, error runtime
+lapor "\n[4] Audit"
+fungsi cairkan(p, jumlah)
+    pastikan(jumlah > 0, "jumlah pencairan harus positif")
+    sisa = p.pagu - p.realisasi
+    jika jumlah > sisa
+        Mangkrak "Pencairan " + rupiah(jumlah) + " untuk " + p.nama + " melebihi sisa pagu"
+    akhir
+    p.realisasi += jumlah
+    kembalikan sisa - jumlah
+akhir
+
+untuk permintaan dalam [[0, 100000000], [1, 50000000], [3, -5], [2, 999999999999]]
+    p = proyek[permintaan[0]]
+    coba
+        sisa = cairkan(p, permintaan[1])
+        lapor "  ✅ " + p.nama + ": sisa " + rupiah(sisa)
+    jikaGagal alasan
+        lapor "  ⚠️ " + alasan
+    akhirCoba
+akhir
+
+// ---------- State negara + satire (deterministik dengan --seed)
+lapor "\n[5] Realisasi di lapangan"
+Korupsi(15)
+progress = 87
+status_proyek = "Menunggu Revisi Anggaran"
+audit = Audit()
+lapor "  Progress         : " + audit.progress + "%"
+lapor "  Langkah eksekusi : " + audit.langkah
+lapor "  Bocor            : " + rupiah(audit.total_korupsi)
+lapor "  Status           : " + audit.status_proyek
+
+// ---------- Dialek formal v5 di file yang sama
+Rapat
+    Wacana "Rapat koordinasi lintas dialek"
+    Anggaran tersisa = panjang(saring(proyek, pembuatFilter(100)))
+    Sita tersisa > 2 {
+        Korupsi "\n[6] " + tersisa + " proyek belum tuntas. Dibentuk pansus."
+    } Pengadilan {
+        Korupsi "\n[6] Semua proyek tuntas (di atas kertas)."
+    }
+Bubarkan
+
+selesai()
