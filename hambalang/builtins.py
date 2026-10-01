@@ -20,6 +20,10 @@ from hambalang.runtime import (MAX_SEQUENCE, Builtin, HambaFunction, Runtime, de
 
 BUILTINS: Dict[str, Builtin] = {}
 
+# Penanda argumen opsional yang tidak diberikan. Jangan pakai None: None adalah
+# nilai HambaLang `kosong` yang bisa dikirim user secara eksplisit.
+_OMIT = object()
+
 
 def builtin(name: str, min_args: int = 0, max_args: Optional[int] = -1, aliases=()):
     """Daftarkan builtin. ``max_args=-1`` berarti sama dengan ``min_args``."""
@@ -55,6 +59,11 @@ def _expect(name: str, v: Any, kind: str):
     }
     if not checks[kind](v):
         raise OperasiIlegal(f"{name}() butuh {kind}, bukan {type_name(v)}")
+
+
+def _finite(name: str, v: Any):
+    if isinstance(v, float) and not math.isfinite(v):
+        raise OperasiIlegal(f"{name}() tidak bisa untuk NaN/TakHingga")
 
 
 def _int(name: str, v: Any) -> int:
@@ -109,6 +118,7 @@ def _bulat(rt, x):
 @builtin("bulatkan", 1, 2)
 def _bulatkan(rt, x, digit=0):
     _expect("bulatkan", x, "angka")
+    _finite("bulatkan", x)
     digit = _int("bulatkan", digit)
     r = round(x, digit)
     return int(r) if digit <= 0 else r
@@ -185,11 +195,11 @@ def _rata(rt, xs):
 
 
 @builtin("acak", 0, 2)
-def _acak(rt, a=None, b=None):
+def _acak(rt, a=_OMIT, b=_OMIT):
     """acak() -> 0..1, acak(n) -> 0..n-1, acak(a, b) -> a..b (inklusif)."""
-    if a is None:
+    if a is _OMIT:
         return rt.rng.random()
-    if b is None:
+    if b is _OMIT:
         n = _int("acak", a)
         if n <= 0:
             raise OperasiIlegal("acak(n) butuh n > 0")
@@ -209,9 +219,9 @@ def _acak_pilih(rt, xs):
 
 
 @builtin("rentang", 1, 3)
-def _rentang(rt, a, b=None, step=1):
+def _rentang(rt, a, b=_OMIT, step=1):
     """rentang(n) -> [0..n-1], rentang(a, b) -> [a..b-1] (seperti Python)."""
-    if b is None:
+    if b is _OMIT:
         a, b = 0, a
     a, b, step = _int("rentang", a), _int("rentang", b), _int("rentang", step)
     if step == 0:
@@ -276,11 +286,11 @@ def _balik(rt, x):
 
 
 @builtin("irisan", 2, 3)
-def _irisan(rt, x, a, b=None):
+def _irisan(rt, x, a, b=_OMIT):
     if not isinstance(x, (list, str)):
         raise OperasiIlegal(f"irisan() butuh daftar atau teks, bukan {type_name(x)}")
     a = _int("irisan", a)
-    return x[a:] if b is None else x[a:_int("irisan", b)]
+    return x[a:] if b is _OMIT else x[a:_int("irisan", b)]
 
 
 @builtin("indeksDari", 2)
@@ -343,13 +353,14 @@ def _gabung(rt, xs, sep=""):
 
 
 @builtin("pisah", 1, 2, aliases=("split",))
-def _pisah(rt, s, sep=None):
+def _pisah(rt, s, sep=_OMIT):
     _expect("pisah", s, "teks")
-    if sep is None:
+    if sep is _OMIT:
         return s.split()
+    _expect("pisah", sep, "teks")
     if sep == "":
         return list(s)
-    return s.split(to_str(sep))
+    return s.split(sep)
 
 
 @builtin("besar", 1, aliases=("hurufBesar",))
@@ -399,6 +410,7 @@ def _ulangi(rt, s, n):
 def _rupiah(rt, n):
     """Format angka gaya Indonesia: 1500000 -> 'Rp 1.500.000'."""
     _expect("rupiah", n, "angka")
+    _finite("rupiah", n)
     sign = "-" if n < 0 else ""
     whole = f"{int(round(abs(n))):,}".replace(",", ".")
     return f"{sign}Rp {whole}"
@@ -455,8 +467,8 @@ def _to_json_value(v: Any) -> Any:
 
 
 @builtin("keJSON", 1, 2)
-def _ke_json(rt, v, indent=None):
-    ind = None if indent is None else _int("keJSON", indent)
+def _ke_json(rt, v, indent=_OMIT):
+    ind = None if indent is _OMIT else _int("keJSON", indent)
     return json.dumps(_to_json_value(v), ensure_ascii=False, indent=ind)
 
 
@@ -524,10 +536,10 @@ def _korupsi(rt, persen):
 
 
 @builtin("Mangkrak", 0, 1)
-def _mangkrak(rt, x=None):
+def _mangkrak(rt, x=_OMIT):
     """Mangkrak(ms): proyek tertunda. Mangkrak("alasan"): lempar ProyekMangkrak."""
-    if x is None or not is_number(x):
-        raise ProyekMangkrak("Proyek mangkrak" if x is None else to_str(x))
+    if x is _OMIT or not is_number(x):
+        raise ProyekMangkrak("Proyek mangkrak" if x is _OMIT else to_str(x))
     seconds = max(0, x) / 1000
     rt.write(f"⏳ Proyek mangkrak selama {format_number(seconds)} detik...")
     rt.sleep(seconds)
@@ -675,9 +687,9 @@ def _sambungDB(rt, name, db_type, target):
 
 
 def _parse_dsn(s: str) -> Dict[str, str]:
-    """'host=localhost user=root database=x' -> dict untuk mysql.connector."""
+    """'host=localhost user=root database=x' (pemisah spasi atau ';') -> dict untuk mysql.connector."""
     out = {}
-    for part in s.split():
+    for part in s.replace(";", " ").split():
         if "=" in part:
             k, v = part.split("=", 1)
             out[k] = v
@@ -686,7 +698,7 @@ def _parse_dsn(s: str) -> Dict[str, str]:
 
 @builtin("queryDB", 2, 3)
 @unsafe
-def _queryDB(rt, name, sql, params=None):
+def _queryDB(rt, name, sql, params=_OMIT):
     """
     queryDB(db, sql [, params]). SELECT -> daftar objek (kolom -> nilai);
     selain itu -> jumlah baris terdampak. Pakai ``params`` (daftar) dengan
@@ -696,11 +708,13 @@ def _queryDB(rt, name, sql, params=None):
     conn = rt.db_connections.get(name)
     if conn is None:
         raise OperasiIlegal(f"Database '{name}' belum terhubung (panggil sambungDB dulu)")
-    if params is not None and not isinstance(params, list):
+    if params is _OMIT:
+        params = []
+    if not isinstance(params, list):
         raise OperasiIlegal("Parameter query harus daftar")
     try:
         cur = conn.cursor()
-        cur.execute(sql, tuple(params or ()))
+        cur.execute(sql, tuple(params))
         if cur.description is not None:
             cols = [d[0] for d in cur.description]
             rows = [{c: _db_value(v) for c, v in zip(cols, row)} for row in cur.fetchall()]

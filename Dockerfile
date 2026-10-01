@@ -3,7 +3,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 COPY . .
-RUN pip install --no-cache-dir -e ".[http]" && rm -rf web
+RUN pip install --no-cache-dir -e ".[http,db]" && rm -rf web
 
 ENTRYPOINT ["hambalang"]
 CMD ["run", "examples/full_demo.hl", "--fast"]

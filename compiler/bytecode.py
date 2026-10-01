@@ -261,16 +261,46 @@ class BytecodeCompiler:
             self.emit(OP_PUSH, self._add_constant(0))
             self.emit(OP_EQ)
         elif isinstance(node, N.Logical):
-            # Tanpa short-circuit: dan = a*b != 0, atau = a+b != 0 (operand 0/1).
+            # Short-circuit dengan lompatan. Format v3 tidak punya DUP, jadi
+            # hasilnya boolean 1/0 (sama seperti hasil perbandingan di VM v3),
+            # bukan nilai operandnya.
+            false_jumps, true_jumps = [], []
             self._emit_expr(node.left)
+            if node.op == 'dan':
+                false_jumps.append(self._emit_jif())
+            else:
+                skip = self._emit_jif()
+                true_jumps.append(self._emit_jump())
+                self._patch(skip)
             self._emit_expr(node.right)
-            self.emit(OP_MUL if node.op == 'dan' else OP_ADD)
+            false_jumps.append(self._emit_jif())
+            for j in true_jumps:
+                self._patch(j)
+            self.emit(OP_PUSH, self._add_constant(1))
+            end = self._emit_jump()
+            for j in false_jumps:
+                self._patch(j)
             self.emit(OP_PUSH, self._add_constant(0))
-            self.emit(OP_GT)
+            self._patch(end)
         else:
             raise ValueError(
                 f"Ekspresi '{type(node).__name__}' tidak didukung compiler legacy v3; "
                 "gunakan 'hambalang compile' (HBC v4)")
+
+    def _emit_jif(self) -> int:
+        pos = len(self.code)
+        self.emit(OP_JUMP_IF_FALSE, 0)
+        return pos
+
+    def _emit_jump(self) -> int:
+        pos = len(self.code)
+        self.emit(OP_JUMP, 0)
+        return pos
+
+    def _patch(self, pos: int):
+        target = len(self.code)
+        self.code[pos + 1] = target & 0xFF
+        self.code[pos + 2] = (target >> 8) & 0xFF
 
     def emit(self, opcode: int, operand: int = 0):
         """Emit bytecode instruction"""

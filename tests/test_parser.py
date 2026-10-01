@@ -113,3 +113,18 @@ def test_error_reports_line_number():
     with pytest.raises(SalahKetik) as exc:
         parse("lapor 1\nlapor 2\nx = = 3")
     assert exc.value.line == 3
+
+
+@pytest.mark.parametrize("src,msg", [
+    ('lapor "\\q"', "Escape tidak dikenal"),
+    ("café = 1", "Karakter tidak dikenal"),
+    ("fungsi Rapat()\nakhir", "nama khusus"),
+    ("x = " + "9" * 5000, "terlalu panjang"),
+])
+def test_strict_lexing(src, msg):
+    with pytest.raises(SalahKetik, match=msg):
+        parse(src)
+
+
+def test_leading_dot_number():
+    assert expr_of(".5").value == 0.5

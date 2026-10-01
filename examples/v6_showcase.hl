@@ -80,6 +80,7 @@ Korupsi(15)
 progress = 87
 status_proyek = "Menunggu Revisi Anggaran"
 audit = Audit()
+lapor "  Progress         : " + audit.progress + "%"
 lapor "  Langkah eksekusi : " + audit.langkah
 lapor "  Bocor            : " + rupiah(audit.total_korupsi)
 lapor "  Status           : " + audit.status_proyek

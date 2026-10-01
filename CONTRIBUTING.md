@@ -90,6 +90,7 @@ npm install
    - Update documentation
 4. **Test Your Changes**
    ```bash
+   pip install -e ".[dev]"                  # sekali saja: pytest + ruff
    pytest                                   # wajib hijau
    ruff check hambalang tests
    hambalang run examples/your_example.hl --vm

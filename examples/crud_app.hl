@@ -10,9 +10,10 @@ lapor "Database: SQLite"
 
 lapor "\n[SETUP] Inisialisasi Database..."
 
-sambungDB("infra_db", "sqlite", "infrastruktur.db")
+// Database khusus contoh ini; tabelnya di-reset setiap kali dijalankan.
+sambungDB("infra_db", "sqlite", "contoh_crud_app.db")
 
-// Mulai dari tabel bersih supaya contoh ini bisa dijalankan berulang kali
+// Mulai dari tabel bersih (hanya di contoh_crud_app.db) supaya contoh ini bisa dijalankan berulang kali
 queryDB("infra_db", "DROP TABLE IF EXISTS proyek")
 
 // Create tables
@@ -244,7 +245,7 @@ tutupDB("infra_db")
 lapor "\n" + "=" * 50
 lapor "=== SISTEM MANAJEMEN PROYEK SELESAI ==="
 lapor "✅ Semua operasi CRUD berhasil dijalankan"
-lapor "📊 Database: infrastruktur.db"
+lapor "📊 Database: contoh_crud_app.db"
 lapor "=" * 50
 
 selesai()

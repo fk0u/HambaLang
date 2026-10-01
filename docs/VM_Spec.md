@@ -24,8 +24,8 @@ dan `hambalang/builtins.py` yang juga dipakai interpreter.
 
 ### Kesetaraan dengan interpreter
 
-Compiler menyisipkan `LINE n` di awal setiap statement (dan di back-edge loop
-`selama`). `LINE` menaikkan penghitung langkah persis seperti interpreter
+Compiler menyisipkan `LINE n` di awal setiap statement dan di back-edge
+setiap loop. `LINE` menaikkan penghitung langkah persis seperti interpreter
 menghitung statement, jadi `Audit().langkah`, batas `--step-limit`, dan nomor
 baris error sama di kedua engine. Test suite memverifikasi ini dengan
 menjalankan setiap program di keduanya dan membandingkan output.
@@ -120,8 +120,9 @@ selama c:                 untuk x dalam e / dari..sampai / Rapat(n):
         JUMP_IF_FALSE end   top: FOR_ITER end
         <body>                   STORE_NAME x      (Rapat: POP)
   cont: LINE                     <body>
-        JUMP top                 JUMP top
-  end:                      brk: POP               (hanya bila ada 'hentikan')
+        JUMP top           cont: LINE              (target 'lanjut')
+  end:                           JUMP top
+                            brk: POP               (hanya bila ada 'hentikan')
                             end:
 ```
 
@@ -167,4 +168,8 @@ Toolchain Phase 3–4 (`compiler/bytecode.py`, `vm/hamba_vm.py`,
 `vm/obfuscated_vm.py`, `obfuscator/`) tetap tersedia untuk obfuscation dan
 Hell Mode CTF. Format v3 memakai operand 16-bit, variabel bernomor, dan hanya
 mendukung subset dialek advanced (`set`, `lapor`, `Korupsi`, `jika` tanpa
-`atau`, `Rapat(n)`). Gunakan `hambalang compile --legacy` untuk menghasilkannya.
+`atau`, `Rapat(n)`). Ekspresi diparse dengan parser v6 lalu diturunkan ke
+opcode v3; karena format v3 tidak punya tipe boolean/kosong, `benar`/`salah`
+menjadi `1`/`0`, `kosong` menjadi `0`, dan `dan`/`atau` menghasilkan 1/0
+(tetap short-circuit). Fungsi, daftar, objek, dan pemanggilan fungsi
+ditolak dengan pesan yang menyarankan `hambalang compile` (HBC v4). Gunakan `hambalang compile --legacy` untuk menghasilkannya.

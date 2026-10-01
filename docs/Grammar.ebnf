@@ -11,7 +11,8 @@
 
 program         = { NL } , { statement } ;
 
-block(end)      = { statement } , end ;          (* end tidak termasuk body *)
+block(end)      = { statement } ;                 (* berhenti SEBELUM kata kunci `end`;
+                                                     terminator ditulis eksplisit oleh tiap rule *)
 brace_block     = { NL } , "{" , { statement } , "}" ;
 
 statement       = { NL } , ( simple_stmt | compound_stmt ) ;
@@ -104,9 +105,13 @@ pair            = ( IDENT | expression ) , ":" , expression ;
 
 (* ---------------------------------------------------------- lexical *)
 
-IDENT           = ( letter | "_" ) , { letter | digit | "_" } ;   (* bukan kata kunci *)
-NUMBER          = digit , { digit | "_" } , [ "." , digit , { digit | "_" } ] ,
+IDENT           = ( letter | "_" ) , { letter | digit | "_" } ;   (* bukan kata kunci, bukan
+                                                                    Korupsi/Mangkrak/Rapat/selesai *)
+letter          = "A" … "Z" | "a" … "z" ;                         (* ASCII saja *)
+digit           = "0" … "9" ;
+NUMBER          = ( digit , { digit | "_" } , [ "." , digit , { digit | "_" } ]
+                  | "." , digit , { digit | "_" } ) ,                       (* .5 juga sah *)
                   [ ( "e" | "E" ) , [ "+" | "-" ] , digit , { digit } ] ;
 STRING          = '"' , { char | escape } , '"' | "'" , { char | escape } , "'" ;
-escape          = "\" , ( "n" | "t" | "r" | "0" | "\" | '"' | "'" ) ;
+escape          = "\" , ( "n" | "t" | "r" | "0" | "\" | '"' | "'" ) ;   (* escape lain = SalahKetik *)
 comment         = "//" , { any } | "#" , { any } | "/*" , { any } , "*/" ;

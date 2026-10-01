@@ -9,7 +9,7 @@ lapor "Sistem Manajemen Proyek"
 // ==========================================
 
 lapor "\n[1] Menghubungkan ke database..."
-sambungDB("proyek_db", "sqlite", "proyek_hambalang.db")
+sambungDB("proyek_db", "sqlite", "contoh_database.db")
 
 // ==========================================
 // 2. CREATE TABLE
@@ -17,6 +17,7 @@ sambungDB("proyek_db", "sqlite", "proyek_hambalang.db")
 
 lapor "\n[2] Membuat tabel proyek..."
 
+// contoh_database.db khusus contoh ini; tabel di-reset setiap run
 queryDB("proyek_db", "DROP TABLE IF EXISTS proyek")
 create_table = "CREATE TABLE IF NOT EXISTS proyek (id INTEGER PRIMARY KEY, nama TEXT, lokasi TEXT, anggaran INTEGER, status TEXT)"
 

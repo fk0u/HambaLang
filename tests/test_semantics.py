@@ -538,3 +538,54 @@ def test_big_integers_still_work(run):
 def test_repeated_squaring_is_bounded(run):
     with pytest.raises(OperasiIlegal, match="terlalu besar"):
         run("x = 3\nRapat(40)\n  x = x * x\nselesaiRapat")
+
+
+@pytest.mark.parametrize("src", [
+    "untuk i dari 1 sampai 1000000000\nakhir",
+    "Rapat(1000000000000000000)\nselesaiRapat",
+    "untuk x dalam rentang(9000000)\nakhir",
+])
+def test_empty_loops_still_hit_step_limit(run, src):
+    with pytest.raises(NegaraBangkrut):
+        run(src, step_limit=1000)
+
+
+def test_iteration_counts_as_step(run):
+    # 1 (untuk) + 3 iterasi x (1 statement body + 1 back-edge) + 1 (lapor)
+    assert run("untuk i dari 1 sampai 3\n  x = i\nakhir\nlapor Audit().langkah") == "8"
+
+
+@pytest.mark.parametrize("src", [
+    'x = ulangi("a", 6000000)\ny = x + x',
+    "x = rentang(6000000)\ny = x + x",
+])
+def test_concat_guard(run, src):
+    with pytest.raises(OperasiIlegal, match="terlalu besar"):
+        run(src)
+
+
+def test_nested_equality_keeps_bool_distinct(run):
+    assert run("lapor [benar] == [1]\nlapor {a: [salah]} == {a: [0]}\nlapor [1, [2]] == [1, [2]]") \
+        == "salah\nsalah\nbenar"
+
+
+@pytest.mark.parametrize("src", ['lapor acak(kosong)', 'lapor pisah("a b", kosong)', 'lapor bulatkan(angka("nan"))',
+                                 'Rapat(angka("inf"))\nselesaiRapat'])
+def test_explicit_kosong_and_non_finite_are_errors(run, src):
+    with pytest.raises(OperasiIlegal):
+        run(src)
+
+
+def test_run_source_forwards_output():
+    from hambalang import run_source
+    seen = []
+    assert run_source('lapor "a"\nlapor "b"', output=seen.append) == "a\nb"
+    assert seen == ["a", "b"]
+
+
+def test_recursion_limit_is_restored():
+    import sys
+    from hambalang import run_source
+    before = sys.getrecursionlimit()
+    run_source("fungsi f(n)\n jika n > 0\n  kembalikan f(n - 1)\n akhir\n kembalikan 0\nakhir\nlapor f(150)")
+    assert sys.getrecursionlimit() == before

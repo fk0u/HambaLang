@@ -124,3 +124,37 @@ def test_vm_and_interpreter_count_same_steps():
             Interpreter(rt).run(parse(src))
         steps.append(rt.steps)
     assert steps[0] == steps[1]
+
+
+def test_bigint_constant_beyond_str_digit_limit_roundtrips():
+    co = compile_source("x = 7 ** 30000\nlapor x % 1000")
+    co.consts.append(7 ** 30000)
+    again = B.loads(B.dumps(co))
+    assert again.consts[-1] == 7 ** 30000
+
+
+@pytest.mark.parametrize("mutate,msg", [
+    (lambda co: co.code.__setitem__(0, (B.LOAD_CONST, 999)), "di luar jangkauan"),
+    (lambda co: co.code.insert(0, (B.JUMP, 10_000)) or co.lines.insert(0, 1), "alamat lompat"),
+    (lambda co: co.code.insert(0, (B.BINARY, 99)) or co.lines.insert(0, 1), "operator biner"),
+])
+def test_loader_rejects_invalid_operands(mutate, msg):
+    co = compile_source("lapor 1")
+    mutate(co)
+    with pytest.raises(B.BytecodeError, match=msg):
+        B.loads(B.dumps(co))
+
+
+def test_dump_rejects_line_table_mismatch():
+    co = compile_source("lapor 1")
+    co.lines.pop()
+    with pytest.raises(B.BytecodeError, match="tabel baris"):
+        B.dumps(co)
+
+
+def test_loader_reports_corrupt_strings():
+    data = bytearray(B.dumps(compile_source('lapor "abc"')))
+    i = data.index(b"abc")
+    data[i:i + 3] = b"\xff\xfe\xfd"
+    with pytest.raises(B.BytecodeError):
+        B.loads(bytes(data))

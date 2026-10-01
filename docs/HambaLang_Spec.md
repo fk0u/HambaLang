@@ -31,10 +31,11 @@ Pipeline: `source → lexer → parser → AST → (interpreter | compiler → V
   diabaikan; di dalam literal objek `{ }` juga diabaikan oleh parser.
 - Komentar: `// …`, `# …`, `/* … */`. `Wacana ekspresi` adalah komentar
   "resmi" yang diparse tetapi tidak dieksekusi.
-- Identifier: `[A-Za-z_][A-Za-z0-9_]*`, case-sensitive, bukan kata kunci.
-- Angka: `42`, `1_000_000`, `3.14`, `1.5e9`. Teks: `"…"` atau `'…'`, boleh
-  multi-baris, escape `\n \t \r \0 \\ \" \'`.
-- Dua kata kunci dibedakan oleh token sesudahnya: `Korupsi(` / `Mangkrak(` /
+- Identifier: `[A-Za-z_][A-Za-z0-9_]*` (ASCII), case-sensitive, bukan kata
+  kunci dan bukan nama khusus `Korupsi`, `Mangkrak`, `Rapat`, `selesai`.
+- Angka: `42`, `1_000_000`, `3.14`, `.5`, `1.5e9`. Teks: `"…"` atau `'…'`, boleh
+  multi-baris, escape `\n \t \r \0 \\ \" \'` (escape lain = `SalahKetik`).
+- Tiga kata kunci dibedakan oleh token sesudahnya: `Korupsi(` / `Mangkrak(` /
   `Rapat(` dengan kurung **menempel** adalah pemanggilan/loop; tanpa kurung
   menempel masing-masing berarti print (v5), raise (v5), dan pembuka blok
   program `Rapat … Bubarkan`.
@@ -117,8 +118,9 @@ yang tidak tertangkap menghentikan program; CLI menampilkan jenis, posisi
 
 ## 7. Eksekusi terbatas & determinisme
 
-- Setiap statement yang dieksekusi = 1 langkah; setiap putaran `selama`
-  menambah 1 langkah di back-edge. Default batas 1.000.000.
+- Setiap statement yang dieksekusi = 1 langkah; setiap putaran loop
+  (`selama`, `untuk`, `Rapat(n)`, `Proyek`) yang selesai menambah 1 langkah
+  di back-edge, sehingga loop dengan body kosong pun tetap dibatasi. Default batas 1.000.000.
 - Semua keacakan (`Korupsi`, event `Mangkrak`, `acak*`) memakai satu RNG per
   run yang di-seed dari `--seed`. Tanpa seed, RNG di-seed acak.
 - `Mangkrak(ms)` hanya benar-benar tidur jika runtime `realtime` (CLI tanpa

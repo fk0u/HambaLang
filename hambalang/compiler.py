@@ -144,7 +144,7 @@ class _FunctionCompiler:
         for j in loop.break_jumps:
             self.patch(j)
 
-    def _iter_loop(self, var: Optional[str], body: List[N.Node]):
+    def _iter_loop(self, var: Optional[str], body: List[N.Node], line: int):
         """Loop berbasis iterator (stack teratas = iterator)."""
         top = self.here()
         exhausted = self.emit(B.FOR_ITER)
@@ -152,9 +152,14 @@ class _FunctionCompiler:
             self.emit(B.POP)
         else:
             self.emit(B.STORE_NAME, self.const(var))
-        loop = self._loop(True, top)
+        loop = self._loop(True, None)
         self.body(body)
         self.loops.pop()
+        # Back-edge: 1 langkah per iterasi (sama dengan interpreter), juga
+        # target 'lanjut'. Tanpa ini loop dengan body kosong lolos step limit.
+        cont = self.here()
+        self.line = line
+        self.emit(B.LINE, line)
         self.emit(B.JUMP, top)
         # 'hentikan': buang iterator dulu.
         if loop.break_jumps:
@@ -163,7 +168,7 @@ class _FunctionCompiler:
             self.emit(B.POP)
         self.patch(exhausted)
         for j in loop.continue_jumps:
-            self.patch(j, top)
+            self.patch(j, cont)
 
     def s_ForRange(self, node: N.ForRange):
         self.expr(node.start)
@@ -173,17 +178,17 @@ class _FunctionCompiler:
         else:
             self.emit(B.LOAD_CONST, self.const(1))
         self.emit(B.RANGE_ITER)
-        self._iter_loop(node.var, node.body)
+        self._iter_loop(node.var, node.body, node.line)
 
     def s_ForEach(self, node: N.ForEach):
         self.expr(node.iterable)
         self.emit(B.GET_ITER)
-        self._iter_loop(node.var, node.body)
+        self._iter_loop(node.var, node.body, node.line)
 
     def s_Repeat(self, node: N.Repeat):
         self.expr(node.count)
         self.emit(B.REPEAT_ITER)
-        self._iter_loop(None, node.body)
+        self._iter_loop(None, node.body, node.line)
 
     def s_FuncDef(self, node: N.FuncDef):
         sub = _FunctionCompiler(node.name, node.kind, node.params)

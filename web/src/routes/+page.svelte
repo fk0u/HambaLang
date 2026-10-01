@@ -133,9 +133,6 @@ def run_hambalang(code, engine, seed):
         status = "error"
         out.append("")
         out.append(f"❌ {e.jenis}" + (f" (baris {e.line})" if e.line else "") + f": {e.message}")
-    except RecursionError:
-        status = "error"
-        out.append("❌ Rekursi terlalu dalam")
     out.append("")
     out.append(f"— {rt.steps:,} langkah · anggaran akhir Rp {rt.state['anggaran']:,} —".replace(",", "."))
     return status + "\\n" + "\\n".join(out)

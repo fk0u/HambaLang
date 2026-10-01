@@ -20,7 +20,7 @@ from typing import List, Optional
 from hambalang import __version__
 from hambalang import bytecode as B
 from hambalang.errors import HambaError, InputBelumLengkap, SalahKetik
-from hambalang.runtime import Runtime, repr_value
+from hambalang.runtime import Runtime, deep_recursion, repr_value
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -105,6 +105,7 @@ def make_runtime(args) -> Runtime:
         sandbox=getattr(args, "sandbox", False) or strict,
         realtime=not getattr(args, "fast", False),
         ctf=getattr(args, "ctf", False),
+        delay=getattr(args, "delay", 0.0) or 0.0,
     )
 
 
@@ -207,7 +208,7 @@ def run_legacy_bytecode(args) -> int:
     else:
         from vm.hamba_vm import run_bytecode_file
         ok = run_bytecode_file(args.file, debug=args.trace, seed=args.seed, ctf_mode=args.ctf,
-                               step_limit=args.step_limit)
+                               step_limit=args.step_limit, delay=getattr(args, "delay", 0.0) or 0.0)
     return 0 if ok else 1
 
 
@@ -230,7 +231,11 @@ def cmd_compile(args) -> int:
     except HambaError as e:
         report_error(e, path, source)
         return 2
-    B.save(co, out)
+    try:
+        B.save(co, out)
+    except (OSError, B.BytecodeError) as e:
+        error(f"Gagal menyimpan bytecode ke {out}: {getattr(e, 'strerror', None) or e}")
+        return 1
     n_funcs = sum(1 for c in co.consts if isinstance(c, B.CodeObject))
     success(f"Bytecode v{B.VERSION} disimpan: {out} ({os.path.getsize(out)} byte, "
             f"{len(co.code)} instruksi, {n_funcs} fungsi)")
@@ -250,7 +255,11 @@ def compile_legacy(path: str, out: str) -> int:
     except Exception as e:
         error(f"Compile legacy gagal: {e}")
         return 1
-    bytecode.save(out)
+    try:
+        bytecode.save(out)
+    except OSError as e:
+        error(f"Gagal menyimpan bytecode ke {out}: {e.strerror}")
+        return 1
     success(f"Bytecode legacy v3 disimpan: {out} (untuk obfuscate/Hell Mode)")
     return 0
 
@@ -340,58 +349,62 @@ def cmd_repl(args) -> int:
     interp = fresh()
     print(f"HambaLang {__version__} REPL — ketik :bantuan untuk bantuan, :keluar untuk keluar.")
     buffer: List[str] = []
-    while True:
-        try:
-            line = input("...  " if buffer else "hl> ")
-        except EOFError:
-            print()
-            return 0
-        except KeyboardInterrupt:
-            print("\n(dibatalkan)")
-            buffer = []
-            continue
-        if not buffer and line.strip().startswith(":"):
-            cmd = line.strip()
-            if cmd in (":keluar", ":q", ":exit"):
+    try:
+        while True:
+            try:
+                line = input("...  " if buffer else "hl> ")
+            except EOFError:
+                print()
                 return 0
-            if cmd == ":bantuan":
-                print(REPL_HELP)
-            elif cmd == ":audit":
-                print_audit(interp.rt)
-            elif cmd == ":vars":
-                for k, v in interp.globals.vars.items():
-                    print(f"  {k} = {repr_value(v)}")
-            elif cmd == ":reset":
-                interp = fresh()
-                print("Sesi direset. Anggaran kembali penuh (secara administratif).")
-            else:
-                error(f"Perintah tidak dikenal: {cmd}")
-            continue
-        buffer.append(line)
-        source = "\n".join(buffer)
-        if not source.strip():
+            except KeyboardInterrupt:
+                print("\n(dibatalkan)")
+                buffer = []
+                continue
+            if not buffer and line.strip().startswith(":"):
+                cmd = line.strip()
+                if cmd in (":keluar", ":q", ":exit"):
+                    return 0
+                if cmd == ":bantuan":
+                    print(REPL_HELP)
+                elif cmd == ":audit":
+                    print_audit(interp.rt)
+                elif cmd == ":vars":
+                    for k, v in interp.globals.vars.items():
+                        print(f"  {k} = {repr_value(v)}")
+                elif cmd == ":reset":
+                    interp.rt.close()
+                    interp = fresh()
+                    print("Sesi direset. Anggaran kembali penuh (secara administratif).")
+                else:
+                    error(f"Perintah tidak dikenal: {cmd}")
+                continue
+            buffer.append(line)
+            source = "\n".join(buffer)
+            if not source.strip():
+                buffer = []
+                continue
+            try:
+                program = parse(source)
+            except InputBelumLengkap:
+                continue
+            except SalahKetik as e:
+                report_error(e, "<repl>", source)
+                buffer = []
+                continue
             buffer = []
-            continue
-        try:
-            program = parse(source)
-        except InputBelumLengkap:
-            continue
-        except SalahKetik as e:
-            report_error(e, "<repl>", source)
-            buffer = []
-            continue
-        buffer = []
-        interp.rt.steps = 0
-        try:
-            result = interp.eval_repl(program)
-        except HambaError as e:
-            report_error(e, "<repl>", source)
-            continue
-        except RecursionError:
-            error("Rekursi terlalu dalam")
-            continue
-        if result is not None:
-            print(Style.wrap("93", repr_value(result)))
+            interp.rt.steps = 0
+            try:
+                result = interp.eval_repl(program)
+            except HambaError as e:
+                report_error(e, "<repl>", source)
+                continue
+            except RecursionError:
+                error("Rekursi terlalu dalam")
+                continue
+            if result is not None:
+                print(Style.wrap("93", repr_value(result)))
+    finally:
+        interp.rt.close()
 
 
 # ===================================================================== debug
@@ -429,6 +442,9 @@ class Debugger:
         self.prompt(vm, frame, op, arg)
 
     def show(self, line: int, context: int = 0):
+        if not 0 < line <= len(self.lines) or not any(self.lines):
+            print(f" → baris {line} (source tidak tersedia)")
+            return
         lo, hi = max(1, line - context), min(len(self.lines), line + context)
         for n in range(lo, hi + 1):
             mark = "→" if n == line else " "
@@ -518,16 +534,28 @@ class Debugger:
 
 def cmd_debug(args) -> int:
     path = args.file
-    source = read_source(path)
-    if source is None:
-        return 1
     from hambalang.compiler import compile_source
     from hambalang.vm import VM
-    try:
-        co = compile_source(source, os.path.basename(path))
-    except HambaError as e:
-        report_error(e, path, source)
-        return 2
+    if path.endswith(".hbc"):
+        # Bytecode v4 tanpa source: debugger tetap jalan, tampilan per instruksi/baris.
+        try:
+            if B.read_version(path) != B.VERSION:
+                error("Debugger hanya mendukung bytecode v4. Bytecode legacy v3: pakai 'hambalang disasm'.")
+                return 1
+            co = B.load(path)
+        except (OSError, B.BytecodeError) as e:
+            error(str(e))
+            return 1
+        source = ""
+    else:
+        source = read_source(path)
+        if source is None:
+            return 1
+        try:
+            co = compile_source(source, os.path.basename(path))
+        except HambaError as e:
+            report_error(e, path, source)
+            return 2
     header("🐛 HambaLang Debugger (HambaVM v4) — ketik 'bantuan' untuk daftar perintah")
     rt = make_runtime(args)
     rt.realtime = False
@@ -591,6 +619,7 @@ def build_parser() -> argparse.ArgumentParser:
     runtime_opts(r)
     r.add_argument("--vm", action="store_true", help="kompilasi ke bytecode lalu jalankan di HambaVM v4")
     r.add_argument("--fast", "--cepat", action="store_true", help="lewati jeda Mangkrak()")
+    r.add_argument("--delay", type=float, default=0.0, help="jeda per langkah dalam detik (visualisasi)")
     r.add_argument("--audit", action="store_true", help="cetak laporan audit di akhir")
     r.add_argument("--strict", action="store_true", help="sandbox + seed 0 bila tidak diberikan")
     r.add_argument("--trace", "--debug", action="store_true", help="cetak setiap baris yang dieksekusi (VM)")
@@ -664,7 +693,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         if not hasattr(args, attr):
             setattr(args, attr, default)
     try:
-        return args.func(args)
+        with deep_recursion():
+            return args.func(args)
     except KeyboardInterrupt:
         print("\n⚠ Dihentikan (rapat dibubarkan paksa)", file=sys.stderr)
         return 130

@@ -7,6 +7,7 @@ import time
 import random
 from typing import Any, List, Dict
 from compiler.bytecode import *
+from hambalang.runtime import to_str
 
 
 class HambaVM:
@@ -124,7 +125,8 @@ class HambaVM:
             b = self.stack.pop()
             a = self.stack.pop()
             if isinstance(a, str) or isinstance(b, str):
-                self.stack.append(f"{a}{b}")  # "teks" + angka = gabung teks
+                # "teks" + angka = gabung teks, format angka sama dengan HambaLang v6
+                self.stack.append(to_str(a) + to_str(b))
             else:
                 self.stack.append(a + b)
             self.pc += 1
@@ -139,6 +141,14 @@ class HambaVM:
             b = self.stack.pop()
             a = self.stack.pop()
             self.stack.append(a * b)
+            self.pc += 1
+
+        elif opcode == OP_MOD:
+            b = self.stack.pop()
+            a = self.stack.pop()
+            if b == 0:
+                raise Exception("Modulo dengan nol")
+            self.stack.append(a % b)
             self.pc += 1
         
         elif opcode == OP_DIV:

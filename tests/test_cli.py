@@ -131,3 +131,13 @@ def test_legacy_compiler_uses_correct_precedence(workdir, capsys):
     assert main(["run", "l.hbc"]) == 0
     out = capsys.readouterr().out.splitlines()
     assert ["5", "14", "ok", "n=14"] == [line for line in out if line in ("5", "14", "ok", "n=14")]
+
+
+def test_legacy_modulo_and_short_circuit(workdir, capsys):
+    f = write(workdir / "m.hl", 'set x = 17 % 5\nlapor x\n'
+                                'jika x == 2 atau 1 / 0 > 0\n  lapor "atau-ok"\nakhir\n'
+                                'jika x == 3 dan 1 / 0 > 0\n  lapor "salah"\nakhir\nlapor "x=" + 1.0\n')
+    assert main(["compile", f, "--legacy", "-o", "m.hbc"]) == 0
+    assert main(["run", "m.hbc"]) == 0
+    out = capsys.readouterr().out.splitlines()
+    assert "2" in out and "atau-ok" in out and "salah" not in out and "x=1" in out

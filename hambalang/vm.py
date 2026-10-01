@@ -48,7 +48,7 @@ class VM:
         except ProgramSelesai:
             return None
         finally:
-            self.frames = []
+            self._abandon(0)
 
     def call_function(self, fn: Any, args: List[Any]) -> Any:
         """Dipanggil builtin (petakan, saring, ...) untuk menjalankan fungsi user."""

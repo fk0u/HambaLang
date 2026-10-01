@@ -89,6 +89,9 @@ def _r_str(f: BinaryIO) -> str:
 
 
 def _w_code(f: BinaryIO, co: CodeObject):
+    if len(co.lines) != len(co.code):
+        raise BytecodeError(f"'{co.name}': tabel baris ({len(co.lines)}) tidak sama dengan "
+                            f"jumlah instruksi ({len(co.code)})")
     if len(co.consts) > 0xFFFF or len(co.params) > 0xFFFF:
         raise BytecodeError(f"'{co.name}' punya terlalu banyak konstanta untuk format HBC v4")
     _w_str(f, co.name)
@@ -117,8 +120,10 @@ def _w_const(f: BinaryIO, c: Any):
         if -(2 ** 63) <= c < 2 ** 63:
             f.write(b"I" + struct.pack("<q", c))
         else:
-            f.write(b"B")
-            _w_str(f, str(c))
+            # Bigint: byte two's-complement (tidak kena batas digit konversi str<->int).
+            data = c.to_bytes((c.bit_length() + 8) // 8, "little", signed=True)
+            f.write(b"B" + struct.pack("<I", len(data)))
+            f.write(data)
     elif isinstance(c, float):
         f.write(b"D" + struct.pack("<d", c))
     elif isinstance(c, str):
@@ -144,7 +149,39 @@ def _r_code(f: BinaryIO) -> CodeObject:
     lines = [struct.unpack("<I", _r_exact(f, 4))[0] for _ in range(n)]
     (nc,) = struct.unpack("<H", _r_exact(f, 2))
     consts = [_r_const(f) for _ in range(nc)]
-    return CodeObject(name, kind, params, [tuple(c) for c in code], lines, consts)
+    co = CodeObject(name, kind, params, [tuple(c) for c in code], lines, consts)
+    _validate(co)
+    return co
+
+
+_NAME_OPS = {"LOAD_NAME", "STORE_NAME", "ATTR_GET", "ATTR_SET", "GLOBAL"}
+
+
+def _validate(co: CodeObject):
+    """Tolak bytecode rusak saat load, bukan crash IndexError saat eksekusi."""
+    n = len(co.code)
+    if co.kind not in ("modul", "fungsi", "prosedur"):
+        raise BytecodeError(f"'{co.name}': jenis kode tidak dikenal: {co.kind!r}")
+    if n == 0 or OPCODES[co.code[-1][0]] not in ("RETURN", "JUMP", "HALT"):
+        raise BytecodeError(f"'{co.name}': kode tidak diakhiri RETURN")
+    for i, (op, arg) in enumerate(co.code):
+        name = OPCODES[op]
+        bad = None
+        if name in CONST_OPS:
+            if arg >= len(co.consts):
+                bad = f"index konstanta {arg} di luar jangkauan"
+            elif name in _NAME_OPS and not isinstance(co.consts[arg], str):
+                bad = "operand nama harus teks"
+            elif name == "MAKE_FUNCTION" and not isinstance(co.consts[arg], CodeObject):
+                bad = "MAKE_FUNCTION butuh konstanta kode"
+        elif name in JUMP_OPS and arg >= n:
+            bad = f"alamat lompat {arg} di luar kode"
+        elif name == "BINARY" and arg >= len(BINARY_OPS):
+            bad = f"operator biner {arg} tidak dikenal"
+        elif name == "UNARY" and arg >= len(UNARY_OPS):
+            bad = f"operator unary {arg} tidak dikenal"
+        if bad:
+            raise BytecodeError(f"'{co.name}' instruksi {i} ({name}): {bad}")
 
 
 def _r_const(f: BinaryIO) -> Any:
@@ -158,7 +195,8 @@ def _r_const(f: BinaryIO) -> Any:
     if tag == b"I":
         return struct.unpack("<q", _r_exact(f, 8))[0]
     if tag == b"B":
-        return int(_r_str(f))
+        (n,) = struct.unpack("<I", _r_exact(f, 4))
+        return int.from_bytes(_r_exact(f, n), "little", signed=True)
     if tag == b"D":
         return struct.unpack("<d", _r_exact(f, 8))[0]
     if tag == b"S":
@@ -206,6 +244,15 @@ def loads(data: bytes) -> CodeObject:
 
 
 def loads_from(f: BinaryIO) -> CodeObject:
+    try:
+        return _loads_from(f)
+    except BytecodeError:
+        raise
+    except (UnicodeDecodeError, struct.error, ValueError, OverflowError, RecursionError) as e:
+        raise BytecodeError(f"Bytecode rusak: {e}") from None
+
+
+def _loads_from(f: BinaryIO) -> CodeObject:
     if f.read(4) != MAGIC:
         raise BytecodeError("Bukan file bytecode HambaLang (magic salah)")
     (version,) = struct.unpack("<H", _r_exact(f, 2))

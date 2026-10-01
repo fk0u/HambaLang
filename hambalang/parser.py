@@ -32,12 +32,6 @@ from hambalang.lexer import EOF, KEYWORDS, NAME, NEWLINE, NUMBER, OP, STRING, To
 COMPARISON_OPS = {"==", "!=", "<", ">", "<=", ">="}
 COMPOUND_OPS = {"+=": "+", "-=": "-", "*=": "*", "/=": "/", "%=": "%"}
 
-# Nama blok untuk pesan error "belum ditutup".
-CLOSERS = {
-    "jika": "akhir", "selama": "akhir", "untuk": "akhir", "fungsi": "akhir", "mulai": "akhir",
-    "coba": "akhirCoba", "prosedur": "akhirProsedur", "Rapat": "selesaiRapat",
-}
-
 
 class Parser:
     def __init__(self, tokens: List[Token]):
@@ -91,6 +85,9 @@ class Parser:
             raise self.error(f"Diharapkan {what}, ditemukan {self.describe(t)}")
         if t.value in KEYWORDS:
             raise self.error(f"'{t.value}' adalah kata kunci, tidak bisa dipakai sebagai {what}")
+        if t.value in self.STATEMENTS:
+            # Korupsi, Mangkrak, Rapat, selesai: nama khusus di awal statement.
+            raise self.error(f"'{t.value}' adalah nama khusus, tidak bisa dipakai sebagai {what}")
         self.advance()
         return t.value
 

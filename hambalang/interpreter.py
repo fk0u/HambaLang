@@ -84,7 +84,10 @@ class Interpreter:
             for stmt in program.body:
                 if isinstance(stmt, N.ExprStmt):
                     self.rt.tick(stmt.line)
-                    result = self.eval(stmt.expr, self.globals)
+                    try:
+                        result = self.eval(stmt.expr, self.globals)
+                    except HambaError as e:
+                        raise e.with_position(stmt.line)
                 else:
                     result = None
                     self.exec(stmt, self.globals)
@@ -171,17 +174,20 @@ class Interpreter:
             assign_name(self.rt, env, node.var, i)
             if not self._loop_body(node.body, env):
                 break
+            self.rt.tick(node.line)
 
     def exec_ForEach(self, node: N.ForEach, env: Env):
         for item in iterate(self.eval(node.iterable, env)):
             assign_name(self.rt, env, node.var, item)
             if not self._loop_body(node.body, env):
                 break
+            self.rt.tick(node.line)
 
     def exec_Repeat(self, node: N.Repeat, env: Env):
         for _ in range(repeat_count(self.eval(node.count, env))):
             if not self._loop_body(node.body, env):
                 break
+            self.rt.tick(node.line)
 
     def exec_FuncDef(self, node: N.FuncDef, env: Env):
         fn = HambaFunction(node.name, node.params, node.kind, env, body=node.body)

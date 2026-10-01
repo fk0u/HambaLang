@@ -6,6 +6,7 @@ nilai, semantik operator, dan state "negara" (anggaran, progress, dsb).
 Interpreter dan VM wajib memakai fungsi-fungsi di sini supaya semantiknya
 identik — test suite membandingkan output keduanya.
 """
+import contextlib
 import json
 import math
 import operator
@@ -254,6 +255,22 @@ def deep_copy(v: Any) -> Any:
     return v
 
 
+@contextlib.contextmanager
+def deep_recursion(limit: int = 20000):
+    """
+    Interpreter & VM rekursif di level Python. Naikkan recursion limit hanya
+    selama eksekusi, lalu kembalikan (tidak mengubah proses host secara permanen).
+    """
+    old = sys.getrecursionlimit()
+    if old < limit:
+        sys.setrecursionlimit(limit)
+    try:
+        yield
+    finally:
+        if old < limit:
+            sys.setrecursionlimit(old)
+
+
 # ================================================================== operators
 
 def _num_operands(op: str, a: Any, b: Any):
@@ -269,9 +286,14 @@ MAX_SEQUENCE = 10_000_000
 MAX_INT_BITS = 100_000
 
 
-def _repeat(seq: Any, n: int) -> Any:
-    if n > 0 and len(seq) * n > MAX_SEQUENCE:
+def _check_size(n: int):
+    if n > MAX_SEQUENCE:
         raise OperasiIlegal(f"Hasil terlalu besar (> {MAX_SEQUENCE:,} elemen). Anggaran memori tidak cukup.")
+
+
+def _repeat(seq: Any, n: int) -> Any:
+    if n > 0:
+        _check_size(len(seq) * n)
     return seq * n
 
 
@@ -299,10 +321,14 @@ def binary_op(op: str, a: Any, b: Any) -> Any:
 def _binary_op(op: str, a: Any, b: Any) -> Any:
     if op == "+":
         if isinstance(a, str) or isinstance(b, str):
-            return to_str(a) + to_str(b)
+            sa, sb = to_str(a), to_str(b)
+            _check_size(len(sa) + len(sb))
+            return sa + sb
         if isinstance(a, list) and isinstance(b, list):
+            _check_size(len(a) + len(b))
             return a + b
         if isinstance(a, dict) and isinstance(b, dict):
+            _check_size(len(a) + len(b))
             return {**a, **b}
         a, b = _num_operands(op, a, b)
         return a + b
@@ -367,9 +393,14 @@ def _binary_op(op: str, a: Any, b: Any) -> Any:
 
 
 def values_equal(a: Any, b: Any) -> bool:
-    # benar != 1, supaya boolean dan angka tidak tertukar diam-diam.
+    # benar != 1, supaya boolean dan angka tidak tertukar diam-diam — juga di
+    # dalam daftar/objek (perbandingan bawaan Python menganggap True == 1).
     if isinstance(a, bool) != isinstance(b, bool):
         return False
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(values_equal(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(values_equal(a[k], b[k]) for k in a)
     return a == b
 
 
@@ -468,6 +499,8 @@ def range_values(start: Any, end: Any, step: Any):
 def repeat_count(v: Any) -> int:
     if not is_number(v):
         raise OperasiIlegal(f"Jumlah Rapat harus angka, bukan {type_name(v)}")
+    if isinstance(v, float) and not math.isfinite(v):
+        raise OperasiIlegal("Jumlah Rapat harus angka berhingga (rapat tanpa ujung dilarang)")
     return max(0, int(v))
 
 
@@ -480,7 +513,7 @@ class Runtime:
                  sandbox: bool = False, realtime: bool = False, max_sleep: float = 2.0,
                  output: Optional[Callable[[str], None]] = None,
                  input_fn: Optional[Callable[[str], str]] = None,
-                 ctf: bool = False, max_depth: int = 200):
+                 ctf: bool = False, max_depth: int = 200, delay: float = 0.0):
         self.seed = seed
         self.rng = random.Random(seed)
         self.step_limit = step_limit
@@ -490,6 +523,7 @@ class Runtime:
         self.max_sleep = max_sleep
         self.ctf = ctf
         self.max_depth = max_depth
+        self.delay = delay  # jeda per langkah (detik), untuk demo/visualisasi
         self.depth = 0
         self._output = output
         self._input = input_fn
@@ -531,6 +565,8 @@ class Runtime:
         if self.step_limit and self.steps > self.step_limit:
             raise NegaraBangkrut(
                 f"Batas {self.step_limit:,} langkah terlampaui. Proyek dihentikan audit KPK.", line)
+        if self.delay > 0:
+            time.sleep(self.delay)
 
     def enter_call(self, name: str):
         if self.depth >= self.max_depth:

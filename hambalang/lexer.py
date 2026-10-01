@@ -139,11 +139,11 @@ class Lexer:
                 continue
 
             line, col = self.line, self.col
-            if ch.isdigit() or (ch == "." and self.peek(1).isdigit()):
+            if _is_digit(ch) or (ch == "." and _is_digit(self.peek(1))):
                 self.add(NUMBER, self._number(), line, col, spaced)
             elif ch in "\"'":
                 self.add(STRING, self._string(), line, col, spaced)
-            elif ch.isalpha() or ch == "_":
+            elif _is_ident_start(ch):
                 self.add(NAME, self._name(), line, col, spaced)
             else:
                 for op in OPERATORS:
@@ -177,24 +177,29 @@ class Lexer:
     def _number(self):
         start = self.pos
         is_float = False
-        while self.peek().isdigit() or self.peek() == "_":
+        while _is_digit(self.peek()) or self.peek() == "_":
             self.advance()
-        if self.peek() == "." and self.peek(1).isdigit():
+        if self.peek() == "." and _is_digit(self.peek(1)):
             is_float = True
             self.advance()
-            while self.peek().isdigit() or self.peek() == "_":
+            while _is_digit(self.peek()) or self.peek() == "_":
                 self.advance()
-        if self.peek() in "eE" and (self.peek(1).isdigit() or (self.peek(1) in "+-" and self.peek(2).isdigit())):
+        if self.peek() in "eE" and (_is_digit(self.peek(1)) or (self.peek(1) in "+-" and _is_digit(self.peek(2)))):
             is_float = True
             self.advance()
             if self.peek() in "+-":
                 self.advance()
-            while self.peek().isdigit():
+            while _is_digit(self.peek()):
                 self.advance()
         text = self.src[start:self.pos].replace("_", "")
-        if self.peek().isalpha() or self.peek() == "_":
+        if _is_ident_start(self.peek()):
             raise self.error(f"Angka tidak valid: {text}{self.peek()}")
-        return float(text) if is_float else int(text)
+        if is_float:
+            return float(text)
+        try:
+            return int(text)
+        except ValueError:  # batas digit konversi int Python
+            raise self.error("Literal angka terlalu panjang")
 
     def _string(self) -> str:
         quote = self.advance()
@@ -210,15 +215,31 @@ class Lexer:
                 if self.pos >= len(self.src):
                     raise SalahKetik("String tidak ditutup", start_line)
                 esc = self.advance()
-                out.append(ESCAPES.get(esc, "\\" + esc))
+                if esc not in ESCAPES:
+                    raise SalahKetik(f"Escape tidak dikenal: \\{esc} (yang valid: \\n \\t \\r \\0 \\\\ \\\" \\')",
+                                     self.line, self.col - 2)
+                out.append(ESCAPES[esc])
             else:
                 out.append(ch)
 
     def _name(self) -> str:
         start = self.pos
-        while self.peek().isalnum() or self.peek() == "_":
+        while _is_ident_char(self.peek()):
             self.advance()
         return self.src[start:self.pos]
+
+
+def _is_ident_start(ch: str) -> bool:
+    """Identifier hanya ASCII: [A-Za-z_] (sesuai docs/Grammar.ebnf)."""
+    return ch != "" and (ch == "_" or ("a" <= ch <= "z") or ("A" <= ch <= "Z"))
+
+
+def _is_digit(ch: str) -> bool:
+    return ch != "" and "0" <= ch <= "9"
+
+
+def _is_ident_char(ch: str) -> bool:
+    return _is_ident_start(ch) or _is_digit(ch)
 
 
 def tokenize(source: str) -> List[Token]:
